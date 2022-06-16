@@ -45,13 +45,14 @@ def get_arg_parser():
     parser.add_argument('--use_speaker_embedding', default=True, type=str2bool)
 
     # training parameters
-    parser.add_argument('--batch_size', default=16, type=int)
-    parser.add_argument('--batch_size_eval', default=16, type=int)
-    parser.add_argument('--num_workers', default=16, type=int)
-    parser.add_argument('--num_workers_eval', default=16, type=int)
+    parser.add_argument('--batch_size', default=8, type=int)
+    parser.add_argument('--batch_size_eval', default=8, type=int)
+    parser.add_argument('--num_workers', default=8, type=int)
+    parser.add_argument('--num_workers_eval', default=8, type=int)
     parser.add_argument('--epochs', default=1000, type=int)
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='ta', choices=['en-us', 'ta', 'hi'])
+    parser.add_argument('--add_blank', default=False, type=str2bool)
     parser.add_argument('--print_step', default=25, type=int)
     parser.add_argument('--print_eval', default=False, type=str2bool)
     parser.add_argument('--mixed_precision', default=False, type=str2bool)
@@ -127,6 +128,15 @@ def main(args):
         name=args.dataset_name, meta_file_train="metadata.csv", path=args.dataset_path.format(args.language), language=args.language
     )
 
+    samples, _ = load_tts_samples(dataset_config, eval_split=False,formatter=formatter_ai4b)
+    texts = "".join(item["text"] for item in samples)
+    chars = sorted(list(set(texts)))
+    lang_chars = chars
+    del samples
+    print(lang_chars, len(lang_chars))
+    print("".join(lang_chars))
+    
+
     if args.model == 'glowtts':
         from TTS.tts.configs.shared_configs import CharactersConfig
 
@@ -135,7 +145,7 @@ def main(args):
             eval_batch_size=args.batch_size_eval,
             num_loader_workers=args.num_workers,
             num_eval_loader_workers=args.num_workers_eval,
-            run_name=f"glowtts_{args.dataset_name}",
+            run_name=f"{args.language}_glowtts_{args.dataset_name}",
             run_eval=True,
             test_delay_epochs=-1,
             epochs=args.epochs,
@@ -155,10 +165,12 @@ def main(args):
                 eos="<EOS>",
                 bos="<BOS>",
                 blank="<BLNK>",
-                characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(lang_chars) + "".join(lang_chars_extra),
+                #characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(lang_chars),
+                characters="".join(lang_chars),
                 punctuations="!¡'(),-.:;¿? ",
                 phonemes=None,
             ),
+            add_blank=args.add_blank,
             test_sentences=test_sentences,
             use_speaker_embedding=args.use_speaker_embedding,
             #dashboard_logger = 'wandb'
@@ -194,7 +206,7 @@ def main(args):
         config = VitsConfig(
             #model_args=vitsArgs,
             audio=audio_config,
-            run_name=f"vits_{args.dataset_name}",
+            run_name=f"{args.language}_vits_{args.dataset_name}",
             use_speaker_embedding=args.use_speaker_embedding,
             batch_size=args.batch_size,
             eval_batch_size=args.batch_size_eval,
@@ -220,10 +232,12 @@ def main(args):
                 eos="<EOS>",
                 bos="<BOS>",
                 blank="<BLNK>",
-                characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(tamil_chars) + "".join(tamil_chars_extra),
+                #characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(lang_chars),
+                characters="".join(lang_chars),
                 punctuations="!¡'(),-.:;¿? ",
                 phonemes=None,
             ),
+            add_blank=args.add_blank,
             test_sentences=test_sentences,
             #dashboard_logger = 'wandb'
         )
