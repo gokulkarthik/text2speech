@@ -175,7 +175,7 @@
     "style_wav_for_test": null,
     "length_scale": 1.0,
     "use_speaker_embedding": false,
-    "speakers_file": "output/run-\u064a\u0648\u0646\u064a\u0648-14-2022_06+18\u0645-49bb391/speakers.pth",
+    "speakers_file": "output/github/speakers.pth",
     "use_d_vector_file": false,
     "d_vector_file": false,
     "min_seq_len": 3,

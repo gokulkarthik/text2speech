@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES="1, 3" python3 -m trainer.distribute --script main.py
