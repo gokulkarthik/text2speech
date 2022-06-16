@@ -1,5 +1,6 @@
 import argparse
 import os
+import string
 
 import pandas as pd
 
@@ -35,9 +36,9 @@ def get_arg_parser():
     parser = argparse.ArgumentParser(description='Traning and evaluation script for hateful meme classification')
 
     # dataset parameters
-    parser.add_argument('--dataset_name', default='ai4b-ta', choices=['ljspeech', 'ai4b-ta'])
-    parser.add_argument('--dataset_path', default='../../data/tts/ai4b_preprocessed', type=str)
-    parser.add_argument('--language', default='ta', choices=['en', 'ta'])
+    parser.add_argument('--dataset_name', default='ai4b-tts', choices=['ljspeech', 'ai4b-tts'])
+    parser.add_argument('--dataset_path', default='../../datasets/ai4b-tts/{}', type=str)
+    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
 
     # model parameters
     parser.add_argument('--model', default='vits', choices=['glowtts', 'vits'])
@@ -50,7 +51,7 @@ def get_arg_parser():
     parser.add_argument('--num_workers_eval', default=16, type=int)
     parser.add_argument('--epochs', default=1000, type=int)
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
-    parser.add_argument('--phoneme_language', default='ta', choices=['en-us', 'ta'])
+    parser.add_argument('--phoneme_language', default='ta', choices=['en-us', 'ta', 'hi'])
     parser.add_argument('--print_step', default=25, type=int)
     parser.add_argument('--print_eval', default=False, type=str2bool)
     parser.add_argument('--mixed_precision', default=False, type=str2bool)
@@ -58,6 +59,7 @@ def get_arg_parser():
     parser.add_argument('--save_step', default=1000, type=int)
 
     # distributed training parameters
+    parser.add_argument('--gpus', default='0', type=str)
     parser.add_argument('--continue_path', default="", type=str)
     parser.add_argument('--restore_path', default="", type=str)
     parser.add_argument('--group_id', default="", type=str)
@@ -80,18 +82,49 @@ def formatter_ai4b(root_path, meta_file, **kwargs):  # pylint: disable=unused-ar
     return items
 
 def main(args):
-    tamil_chars_df = pd.read_csv('Characters-Tamil.csv')
-    tamil_chars = sorted(list(set(list("".join(tamil_chars_df['Character'].values.tolist())))))
-    print(tamil_chars, len(tamil_chars))
-    print("".join(tamil_chars))
-    tamil_chars_extra = ['ௗ', 'ஹ', 'ஜ', 'ஸ', 'ஷ']
-    tamil_chars_extra = sorted(list(set(list("".join(tamil_chars_extra)))))
-    print(tamil_chars_extra, len(tamil_chars_extra))
-    print("".join(tamil_chars_extra))
+    if args.language == 'ta':
+        lang_chars_df = pd.read_csv('chars/Characters-Tamil.csv')
+        lang_chars = sorted(list(set(list("".join(lang_chars_df['Character'].values.tolist())))))
+        print(lang_chars, len(lang_chars))
+        print("".join(lang_chars))
+        lang_chars_extra = ['ௗ', 'ஹ', 'ஜ', 'ஸ', 'ஷ']
+        lang_chars_extra = sorted(list(set(list("".join(lang_chars_extra)))))
+        print(lang_chars_extra, len(lang_chars_extra))
+        print("".join(lang_chars_extra))
+        lang_chars = lang_chars + lang_chars_extra
+        
+        test_sentences = [
+                "நேஷனல் ஹெரால்ட் ஊழல் குற்றச்சாட்டு தொடர்பாக, காங்கிரஸ் நாடாளுமன்ற உறுப்பினர் ராகுல் காந்தியிடம், அமலாக்கத்துறை, திங்கள் கிழமையன்று பத்து மணி நேரத்திற்கும் மேலாக விசாரணை நடத்திய நிலையில், செவ்வாய்க்கிழமை மீண்டும் விசாரணைக்கு ஆஜராகிறார்.",
+                "ஒரு விஞ்ஞானி தம் ஆராய்ச்சிகளை எவ்வளவோ கணக்காகவும் முன் யோசனையின் பேரிலும் நுட்பமாகவும் நடத்துகிறார்.",
+            ]
+
+    elif args.language == 'hi':
+        lang_chars_df = pd.read_csv('chars/Characters-Hindi.csv')
+        lang_chars = sorted(list(set(list("".join(lang_chars_df['Character'].values.tolist())))))
+        print(lang_chars, len(lang_chars))
+        print("".join(lang_chars))
+        lang_chars_extra = []
+        lang_chars_extra = sorted(list(set(list("".join(lang_chars_extra)))))
+        print(lang_chars_extra, len(lang_chars_extra))
+        print("".join(lang_chars_extra))
+        lang_chars = lang_chars + lang_chars_extra
+
+        test_sentences = [
+                "बिहार, राजस्थान और उत्तर प्रदेश से लेकर हरियाणा, मध्य प्रदेश एवं उत्तराखंड में सेना में भर्ती से जुड़ी 'अग्निपथ स्कीम' का विरोध जारी है.",
+                "संयुक्त अरब अमीरात यानी यूएई ने बुधवार को एक फ़ैसला लिया कि अगले चार महीनों तक वो भारत से ख़रीदा हुआ गेहूँ को किसी और को नहीं बेचेगा.",
+            ]
+
+    elif args.language == 'en':
+        lang_chars = string.ascii_lowercase
+
+        test_sentences = [
+                "Brazilian police say a suspect has confessed to burying the bodies of missing British journalist Dom Phillips and indigenous expert Bruno Pereira.",
+                "Protests have erupted in India over a new reform scheme to hire soldiers for a fixed term for the armed forces",
+            ]
     
 
     dataset_config = BaseDatasetConfig(
-        name=args.dataset_name, meta_file_train="metadata.csv", path=args.dataset_path, language=args.language
+        name=args.dataset_name, meta_file_train="metadata.csv", path=args.dataset_path.format(args.language), language=args.language
     )
 
     if args.model == 'glowtts':
@@ -122,14 +155,11 @@ def main(args):
                 eos="<EOS>",
                 bos="<BOS>",
                 blank="<BLNK>",
-                characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(tamil_chars) + "".join(tamil_chars_extra),
+                characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(lang_chars) + "".join(lang_chars_extra),
                 punctuations="!¡'(),-.:;¿? ",
                 phonemes=None,
             ),
-            test_sentences=[
-                "நேஷனல் ஹெரால்ட் ஊழல் குற்றச்சாட்டு தொடர்பாக, காங்கிரஸ் நாடாளுமன்ற உறுப்பினர் ராகுல் காந்தியிடம், அமலாக்கத்துறை, திங்கள் கிழமையன்று பத்து மணி நேரத்திற்கும் மேலாக விசாரணை நடத்திய நிலையில், செவ்வாய்க்கிழமை மீண்டும் விசாரணைக்கு ஆஜராகிறார்.",
-                "ஒரு விஞ்ஞானி தம் ஆராய்ச்சிகளை எவ்வளவோ கணக்காகவும் முன் யோசனையின் பேரிலும் நுட்பமாகவும் நடத்துகிறார்.",
-            ],
+            test_sentences=test_sentences,
             use_speaker_embedding=args.use_speaker_embedding,
             #dashboard_logger = 'wandb'
         )
@@ -194,10 +224,7 @@ def main(args):
                 punctuations="!¡'(),-.:;¿? ",
                 phonemes=None,
             ),
-            test_sentences=[
-                ["நேஷனல் ஹெரால்ட் ஊழல் குற்றச்சாட்டு தொடர்பாக, காங்கிரஸ் நாடாளுமன்ற உறுப்பினர் ராகுல் காந்தியிடம், அமலாக்கத்துறை, திங்கள் கிழமையன்று பத்து மணி நேரத்திற்கும் மேலாக விசாரணை நடத்திய நிலையில், செவ்வாய்க்கிழமை மீண்டும் விசாரணைக்கு ஆஜராகிறார்.", "female", None, "ta"],
-                ["ஒரு விஞ்ஞானி தம் ஆராய்ச்சிகளை எவ்வளவோ கணக்காகவும் முன் யோசனையின் பேரிலும் நுட்பமாகவும் நடத்துகிறார்.", "male", None, "ta"],
-            ],
+            test_sentences=test_sentences,
             #dashboard_logger = 'wandb'
         )
 

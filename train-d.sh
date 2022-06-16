@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES="1, 3" python3 -m trainer.distribute --script main.py
+python3 -m trainer.distribute --script main.py --gpus "4,5,6,7"
