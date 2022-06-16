@@ -1,2 +1,6 @@
+librosa
+pandas
 seaborn
+soundfile
+tqdm
 TTS
