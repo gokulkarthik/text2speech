@@ -1,2 +1,6 @@
+__pycache__/
 output/*
-!output/github
+!output/store1
+output_vocoder/*
+!output_vocoder/store1
+wandb/

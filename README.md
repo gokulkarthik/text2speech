@@ -8,6 +8,14 @@ Text-to-speech in Tamil using CoquiTTS.
 
 Reference: [https://github.com/coqui-ai/TTS](https://github.com/coqui-ai/TTS)
 
+### Environment Setup
+```
+> conda create -n tts-env1
+> conda activate tts-env1
+> pip3 install -U torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+> pip3 install -r requirements.txt
+```
+
 1. Format AI4B dataset in LJSpeech format using [dataset_analysis/FormatDatasets.ipynb](./dataset_analysis/FormatDatasets.ipynb)
 2. Analyze AI4B dataset to check TTS suitability using [dataset_analysis/AnalyzeDataset.ipynb](./dataset_analysis/AnalyzeDataset.ipynb)
 3. Set the configuration with [run.sh](./run.sh) (or/and) [main.py](./main.py)
