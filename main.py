@@ -154,7 +154,8 @@ def main(args):
     # set dataset config
     dataset_config = BaseDatasetConfig(
         name=args.dataset_name, 
-        meta_file_train="metadata.csv", 
+        meta_file_train="metadata_train.csv", 
+        meta_file_val="metadata_test.csv", 
         path=args.dataset_path.format(args.language), 
         language=args.language
     )
@@ -286,8 +287,7 @@ def main(args):
     train_samples, eval_samples = load_tts_samples(
         dataset_config,
         eval_split=True,
-        eval_split_max_size=config.eval_split_max_size,
-        eval_split_size=config.eval_split_size,
+        #eval_split_size=config.eval_split_size,
         formatter=formatter_indictts
     )
     train_samples = filter_speaker(train_samples)
@@ -310,7 +310,7 @@ def main(args):
 
     # set trainer
     trainer = Trainer(
-        TrainerArgs(continue_path=args.contiue_path, restore_path=args.restore_path, use_ddp=args.use_ddp, rank=args.rank, group_id=args.group_id), 
+        TrainerArgs(continue_path=args.continue_path, restore_path=args.restore_path, use_ddp=args.use_ddp, rank=args.rank, group_id=args.group_id), 
         config, 
         args.output_path, 
         model=model, 
