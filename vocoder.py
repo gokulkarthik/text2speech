@@ -18,7 +18,7 @@ def get_arg_parser():
     parser.add_argument('--dataset_name', default='indictts', type=str)
     parser.add_argument('--dataset_path', default='../../datasets/indictts/{}/wavs-20k', type=str)
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
-    parser.add_argument('--speaker', default='all') # eg. all, tamilmale, tamilfemale, hindimale, ...
+    parser.add_argument('--speaker', default='all') # eg. all, female, male
     parser.add_argument('--eval_split_size', default=10, type=int)
 
     # model parameters
@@ -61,11 +61,13 @@ def get_arg_parser():
 
     return parser
 
-def filter_speaker(samples, speaker, dataset='indictts'):
+def filter_speaker(samples, speaker, dataset_name='indictts', language='ta'):
     if speaker == 'all':
         return samples
-    if dataset == 'indictts':
-        samples = [sample for sample in samples if sample.rsplit('/', 1)[-1].split('_')[1]==speaker]
+    if dataset_name == 'indictts':
+        if args.language in  ['ta', 'hi']:
+            start_idx = 5
+        samples = [sample for sample in samples if sample.rsplit('/', 1)[-1].split('_')[1][start_idx:]==speaker]
     return samples
 
 def main(args):
@@ -106,8 +108,8 @@ def main(args):
     ap = AudioProcessor(**config.audio.to_dict())
 
     eval_samples, train_samples = load_wav_data(config.data_path, config.eval_split_size)
-    eval_samples = filter_speaker(eval_samples, args.speaker)
-    train_samples = filter_speaker(train_samples, args.speaker)
+    eval_samples = filter_speaker(eval_samples, args.speaker, dataset_name=args.dataset_name, language=args.language)
+    train_samples = filter_speaker(train_samples, args.speaker, dataset_name=args.dataset_name, language=args.language)
 
     model = GAN(config, ap)
 

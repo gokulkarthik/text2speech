@@ -4,3 +4,4 @@ output/*
 output_vocoder/*
 !output_vocoder/store1
 wandb/
+output_wavs

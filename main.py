@@ -26,7 +26,7 @@ def get_arg_parser():
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts'])
     parser.add_argument('--dataset_path', default='../../datasets/indictts/{}', type=str)
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
-    parser.add_argument('--speaker', default='all') # eg. all, tamilmale, tamilfemale, hindimale, ...
+    parser.add_argument('--speaker', default='all') # eg. all, male, female, tamilmale, tamilfemale, hindimale, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
     parser.add_argument('--add_blank', default=False, type=str2bool)
