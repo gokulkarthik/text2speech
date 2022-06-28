@@ -297,17 +297,23 @@ def main(args):
     print("Eval Samples: ", len(eval_samples))
     
     # set speaker manager
-    speaker_manager = SpeakerManager()
-    speaker_manager.set_ids_from_data(train_samples + eval_samples, parse_key="speaker_name")
+    if args.speaker == 'all':
+        speaker_manager = SpeakerManager()
+        speaker_manager.set_ids_from_data(train_samples + eval_samples, parse_key="speaker_name")
+    else:
+        speaker_manager = None
+    
    
     # load model
     if args.model == 'glowtts':
         model = GlowTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
-        config.num_speakers = speaker_manager.num_speakers
+        if args.speaker == 'all':
+            config.num_speakers = speaker_manager.num_speakers
     elif args.model == 'vits':
         model = Vits(config, ap, tokenizer, speaker_manager=speaker_manager)
-        config.num_speakers = speaker_manager.num_speakers
-        config.model_args.num_speakers = speaker_manager.num_speakers
+        if args.speaker == 'all':
+            config.num_speakers = speaker_manager.num_speakers
+            config.model_args.num_speakers = speaker_manager.num_speakers
 
     # set trainer
     trainer = Trainer(
