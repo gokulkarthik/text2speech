@@ -27,7 +27,7 @@ Reference: [https://github.com/coqui-ai/TTS](https://github.com/coqui-ai/TTS)
 > git clone https://github.com/gokulkarthik/Trainer # fixed wandb logger
 > cp Trainer/trainer/logging/wandb_logger.py to the local Trainer installation
 > add `gpus = [str(gpu) for gpu in gpus]` in line 53 of trainer/distribute.py
-> modify line 1416 of trainer/trainer.py
+> modify line 1416 of trainer/trainer.py (if required)
 '''python3
 if hasattr(self.model, "test_log"): 
     self.model.test_log(test_outputs, self.dashboard_logger, self.training_assets, self.total_steps_done)
