@@ -4,12 +4,12 @@ import string
 
 import pandas as pd
 
+from argparse import Namespace
 from trainer import Trainer, TrainerArgs
 from TTS.tts.configs.glow_tts_config import GlowTTSConfig
 from TTS.tts.configs.shared_configs import BaseAudioConfig, BaseDatasetConfig, BaseTTSConfig
 from TTS.tts.configs.vits_config import VitsConfig
 from TTS.tts.datasets import load_tts_samples
-from TTS.encoder.utils.training import init_training
 from TTS.tts.models.glow_tts import GlowTTS
 from TTS.tts.models.vits import Vits, VitsArgs
 from TTS.tts.utils.speakers import SpeakerManager
@@ -33,9 +33,9 @@ def get_arg_parser():
     parser.add_argument('--text_cleaner', default='multilingual_cleaners', choices=['multilingual_cleaners'])
     parser.add_argument('--eval_split_size', default=0.01)
     parser.add_argument('--min_audio_len', default=1)
-    parser.add_argument('--max_audio_len', default=400)
+    parser.add_argument('--max_audio_len', default=20*22050)
     parser.add_argument('--min_text_len', default=1)
-    parser.add_argument('--max_text_len', default=20)
+    parser.add_argument('--max_text_len', default=400)
 
     # model parameters
     parser.add_argument('--model', default='vits', choices=['glowtts', 'vits'])
@@ -68,7 +68,7 @@ def get_arg_parser():
     parser.add_argument('--continue_path', default="", type=str)
     parser.add_argument('--restore_path', default="", type=str)
     parser.add_argument('--group_id', default="", type=str)
-    parser.add_argument('--use_ddp', default=False, type=bool)
+    parser.add_argument('--use_ddp', default=True, type=bool)
     parser.add_argument('--rank', default=0, type=int)
     #parser.add_argument('--gpus', default='0', type=str)
 
@@ -154,8 +154,8 @@ def main(args):
     # set dataset config
     dataset_config = BaseDatasetConfig(
         name=args.dataset_name, 
-        meta_file_train="metadata_train.csv", 
-        meta_file_val="metadata_test.csv", 
+        meta_file_train=f"metadata_train_{args.speaker}.csv", 
+        meta_file_val=f"metadata_test_{args.speaker}.csv", 
         path=args.dataset_path.format(args.language), 
         language=args.language
     )
@@ -165,7 +165,7 @@ def main(args):
         dataset_config, 
         eval_split=False,
         formatter=formatter_indictts)
-    samples = filter_speaker(samples)
+    samples = filter_speaker(samples, args.speaker)
     texts = "".join(item["text"] for item in samples)
     lang_chars = sorted(list(set(texts)))
     print(lang_chars, len(lang_chars))
@@ -211,7 +211,7 @@ def main(args):
         )
 
     # set base tts config
-    base_tts_config = BaseTTSConfig(
+    base_tts_config = Namespace(
         # input representation
         audio=audio_config,
         use_phonemes=args.use_phonemes,
@@ -257,10 +257,11 @@ def main(args):
         batch_size=args.batch_size,
         eval_batch_size=args.batch_size_eval,
         # test
-        test_sentences_file=f'test_sentences/{args.language}.txt',
-        #test_sentences=get_test_sentences(args.language),
+        #test_sentences_file=f'test_sentences/{args.language}.txt',
+        test_sentences=get_test_sentences(args.language),
         eval_split_size=args.eval_split_size,
     )
+    base_tts_config = vars(base_tts_config)
 
     # set model config 
     if args.model == 'glowtts':
@@ -290,8 +291,8 @@ def main(args):
         #eval_split_size=config.eval_split_size,
         formatter=formatter_indictts
     )
-    train_samples = filter_speaker(train_samples)
-    eval_samples = filter_speaker(eval_samples)
+    train_samples = filter_speaker(train_samples, args.speaker)
+    eval_samples = filter_speaker(eval_samples, args.speaker)
     print("Train Samples: ", len(train_samples))
     print("Eval Samples: ", len(eval_samples))
     
@@ -323,7 +324,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '4,5,6,7'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
 
     parser = get_arg_parser()
     args = parser.parse_args()

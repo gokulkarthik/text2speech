@@ -1,9 +1,12 @@
-CUDA_VISIBLE_DEVICES='0,1,2,3' python3 -m traineer.dristribute --script main.py --dataset_name indictts \
+CUDA_VISIBLE_DEVICES='0,1,2,3' python3 -m trainer.distribute --script main.py --dataset_name indictts \
     --language ta \
     --speaker female \
     --use_speaker_embedding f \
     --model vits \
     --batch_size 8 \
     --batch_size_eval 8 \
-    --epochs 1000 \ 
+    --num_workers 16 \
+    --num_workers_eval 16 \
+    --epochs 1000 \
+    --port 54321 \
     --run_description "vits_ta_female"

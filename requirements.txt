@@ -1,7 +1,10 @@
+jupyter
 librosa
 pandas
+scikit-learn
 seaborn
 soundfile
 tqdm
 TTS
 tensorboard
+wandb
