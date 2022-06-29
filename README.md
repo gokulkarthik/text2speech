@@ -24,19 +24,13 @@ Reference: [https://github.com/coqui-ai/TTS](https://github.com/coqui-ai/TTS)
 > pip3 install -U torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
 > pip3 install -r requirements.txt
 
-> git clone https://github.com/gokulkarthik/Trainer # fixed wandb logger
-> cp Trainer/trainer/logging/wandb_logger.py to the local Trainer installation
+> git clone https://github.com/gokulkarthik/Trainer 
+> cp Trainer/trainer/logging/wandb_logger.py to the local Trainer installation # fixed wandb logger
+> cp Trainer/trainer/trainer.py to the local Trainer installation # fixed model.module.test_log and added code to log epoch 
 > add `gpus = [str(gpu) for gpu in gpus]` in line 53 of trainer/distribute.py
-> modify line 1416 of trainer/trainer.py (if required)
-'''python3
-if hasattr(self.model, "test_log"): 
-    self.model.test_log(test_outputs, self.dashboard_logger, self.training_assets, self.total_steps_done)
-elif (self.num_gpus > 1 and hasattr(self.model.module, "test_log")):
-    self.model.module.test_log(test_outputs, self.dashboard_logger, self.training_assets, self.total_steps_done)
-'''
 
-> git clone https://github.com/gokulkarthik/TTS # added multiple output support for TTS.bin.synthesis
-> cp TTS/TTS/bin/synthesize.py to the local TTS installation
+> git clone https://github.com/gokulkarthik/TTS 
+> cp TTS/TTS/bin/synthesize.py to the local TTS installation # added multiple output support for TTS.bin.synthesis
 ```
 
 ### Running Steps:
