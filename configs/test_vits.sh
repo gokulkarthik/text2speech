@@ -1,5 +1,5 @@
-cp output/ta_vits_indictts_female-June-28-2022_06+34AM-4373f00/best_model.pth output/store/ta/vits/
-cp output/ta_vits_indictts_female-June-28-2022_06+34AM-4373f00/config.json output/store/ta/vits/
+cp output/ta_vits_indictts_female-June-28-2022_10+39AM-4dca7b2/best_model.pth output/store/ta/vits/
+cp output/ta_vits_indictts_female-June-28-2022_10+39AM-4dca7b2/config.json output/store/ta/vits/
 
 python3 -m TTS.bin.synthesize --text "../../datasets/indictts/ta/metadata_test_female.csv" \
     --model_path output/store/ta/vits/best_model.pth \

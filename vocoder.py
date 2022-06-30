@@ -114,7 +114,7 @@ def main(args):
     model = GAN(config, ap)
 
     trainer = Trainer(
-        TrainerArgs(continue_path=args.contiue_path, restore_path=args.restore_path, use_ddp=args.use_ddp, rank=args.rank, group_id=args.group_id), 
+        TrainerArgs(continue_path=args.continue_path, restore_path=args.restore_path, use_ddp=args.use_ddp, rank=args.rank, group_id=args.group_id), 
         config, 
         config.output_path, 
         model=model, 
@@ -125,7 +125,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '4,5,6,7'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2,3'
 
     parser = get_arg_parser()
     args = parser.parse_args()

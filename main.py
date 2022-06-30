@@ -26,16 +26,16 @@ def get_arg_parser():
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts'])
     parser.add_argument('--dataset_path', default='../../datasets/indictts/{}', type=str)
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
-    parser.add_argument('--speaker', default='all') # eg. all, male, female, tamilmale, tamilfemale, hindimale, ...
+    parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
     parser.add_argument('--add_blank', default=False, type=str2bool)
     parser.add_argument('--text_cleaner', default='multilingual_cleaners', choices=['multilingual_cleaners'])
     parser.add_argument('--eval_split_size', default=0.01)
     parser.add_argument('--min_audio_len', default=1)
-    parser.add_argument('--max_audio_len', default=20*22050)
+    parser.add_argument('--max_audio_len', default=float("inf")) # 20*22050
     parser.add_argument('--min_text_len', default=1)
-    parser.add_argument('--max_text_len', default=400)
+    parser.add_argument('--max_text_len', default=float("inf")) # 400
 
     # model parameters
     parser.add_argument('--model', default='vits', choices=['glowtts', 'vits'])
@@ -45,6 +45,7 @@ def get_arg_parser():
     parser.add_argument('--epochs', default=1000, type=int)
     parser.add_argument('--batch_size', default=8, type=int)
     parser.add_argument('--batch_size_eval', default=8, type=int)
+    parser.add_argument('--batch_group_size', default=0, type=int)
     parser.add_argument('--num_workers', default=8, type=int)
     parser.add_argument('--num_workers_eval', default=8, type=int)
     parser.add_argument('--mixed_precision', default=False, type=str2bool)
@@ -151,11 +152,18 @@ def get_test_sentences(language):
 
 def main(args):
 
+    if args.speaker == 'all':
+        meta_file_train="metadata_train.csv"
+        meta_file_val="metadata_test.csv"
+    else:
+        meta_file_train=f"metadata_train_{args.speaker}.csv"
+        meta_file_val=f"metadata_test_{args.speaker}.csv"
+
     # set dataset config
     dataset_config = BaseDatasetConfig(
         name=args.dataset_name, 
-        meta_file_train=f"metadata_train_{args.speaker}.csv", 
-        meta_file_val=f"metadata_test_{args.speaker}.csv", 
+        meta_file_train=meta_file_train, 
+        meta_file_val=meta_file_val,
         path=args.dataset_path.format(args.language), 
         language=args.language
     )
@@ -256,6 +264,7 @@ def main(args):
         epochs=args.epochs,
         batch_size=args.batch_size,
         eval_batch_size=args.batch_size_eval,
+        batch_group_size=args.batch_group_size,
         # test
         #test_sentences_file=f'test_sentences/{args.language}.txt',
         test_sentences=get_test_sentences(args.language),
@@ -297,7 +306,7 @@ def main(args):
     print("Eval Samples: ", len(eval_samples))
     
     # set speaker manager
-    if args.speaker == 'all':
+    if args.use_speaker_embedding:
         speaker_manager = SpeakerManager()
         speaker_manager.set_ids_from_data(train_samples + eval_samples, parse_key="speaker_name")
     else:
@@ -309,6 +318,8 @@ def main(args):
         model = GlowTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
         if args.speaker == 'all':
             config.num_speakers = speaker_manager.num_speakers
+        else:
+            config.num_speakers = 1
     elif args.model == 'vits':
         model = Vits(config, ap, tokenizer, speaker_manager=speaker_manager)
         if args.speaker == 'all':
@@ -330,7 +341,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
 
     parser = get_arg_parser()
     args = parser.parse_args()
