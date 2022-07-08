@@ -6,10 +6,12 @@ import pandas as pd
 
 from argparse import Namespace
 from trainer import Trainer, TrainerArgs
+from TTS.tts.configs.fast_pitch_config import FastPitchConfig
 from TTS.tts.configs.glow_tts_config import GlowTTSConfig
 from TTS.tts.configs.shared_configs import BaseAudioConfig, BaseDatasetConfig, BaseTTSConfig
 from TTS.tts.configs.vits_config import VitsConfig
 from TTS.tts.datasets import load_tts_samples
+from TTS.tts.models.forward_tts import ForwardTTS, ForwardTTSArgs
 from TTS.tts.models.glow_tts import GlowTTS
 from TTS.tts.models.vits import Vits, VitsArgs
 from TTS.tts.utils.speakers import SpeakerManager
@@ -38,8 +40,9 @@ def get_arg_parser():
     parser.add_argument('--max_text_len', default=float("inf")) # 400
 
     # model parameters
-    parser.add_argument('--model', default='vits', choices=['glowtts', 'vits'])
+    parser.add_argument('--model', default='glowtts', choices=['glowtts', 'vits', 'fastpitch'])
     parser.add_argument('--use_speaker_embedding', default=True, type=str2bool)
+    parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
 
     # training parameters
     parser.add_argument('--epochs', default=1000, type=int)
@@ -189,9 +192,18 @@ def main(args):
             signal_norm=False,
             do_amp_to_db_linear=False,
         )
+    elif args.model == 'fastpitch':
+        audio_config = BaseAudioConfig(
+            trim_db=60.0,
+            signal_norm=False,
+            mel_fmin=0.0,
+            mel_fmax=8000,
+            spec_gain=1.0,
+            log_func="np.log",
+        )
 
     # set characters config
-    if args.model == 'glowtts':
+    if args.model in ['glowtts', 'fastpitch']:
         from TTS.tts.configs.shared_configs import CharactersConfig
         characters_config = CharactersConfig(
             characters_class="TTS.tts.models.vits.VitsCharacters",
@@ -204,7 +216,7 @@ def main(args):
             punctuations="!¡'(),-.:;¿? ",
             phonemes=None
         )
-    elif args.model == 'vits':
+    elif args.model in ['vits', 'fastpitch']:
         from TTS.tts.models.vits import CharactersConfig
         characters_config = CharactersConfig(
             characters_class="TTS.tts.models.vits.VitsCharacters",
@@ -288,6 +300,24 @@ def main(args):
             model_args=vitsArgs,
             use_speaker_embedding=args.use_speaker_embedding,   
         )
+    elif args.model == "fastpitch":
+        config = FastPitchConfig(
+            **base_tts_config,
+            model_args = ForwardTTSArgs(use_aligner=args.use_aligner),
+            use_speaker_embedding=args.use_speaker_embedding,
+            compute_f0=True,
+            f0_cache_path=os.path.join(args.output_path, "f0_cache"),
+            sort_by_audio_len=True,
+            max_seq_len=500000,
+        )
+
+        if not config.model_args.use_aligner:
+            manager = ModelManager()
+            model_path, config_path, _ = manager.download_model("tts_models/en/ljspeech/tacotron2-DCA")
+            # TODO: make compute_attention python callable
+            os.system(
+                f"python TTS/bin/compute_attention_masks.py --model_path {model_path} --config_path {config_path} --dataset ljspeech --dataset_metafile metadata.csv --data_path ./recipes/ljspeech/LJSpeech-1.1/  --use_cuda true"
+            )
 
     # set preprocessors
     ap = AudioProcessor.init_from_config(config)
@@ -325,6 +355,8 @@ def main(args):
         if args.speaker == 'all':
             config.num_speakers = speaker_manager.num_speakers
             config.model_args.num_speakers = speaker_manager.num_speakers
+    elif args.model == 'fastpitch':
+        model = ForwardTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
 
     # set trainer
     trainer = Trainer(
@@ -341,7 +373,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
 
     parser = get_arg_parser()
     args = parser.parse_args()

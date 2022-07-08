@@ -125,7 +125,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '2,3'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
 
     parser = get_arg_parser()
     args = parser.parse_args()

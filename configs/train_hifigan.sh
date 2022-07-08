@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES='0' python3 -m trainer.distribute --script vocoder.py --dataset_name indictts \
+CUDA_VISIBLE_DEVICES='0' python3 vocoder.py --dataset_name indictts \
     --language ta \
     --speaker male \
     --batch_size 16 \
