@@ -5,6 +5,8 @@ Text-to-speech in Indian languages using CoquiTTS. The models are trained using 
 ### Supported Acoustic Models:
 1. GlowTTS (Text2Mel)
 2. VITS (Text2Speech)
+3. FastPitch (Text2Mel)
+4. Tactoron2 (Text2Mel)
 
 ### Supported Vocoders:
 1. HiFiGAN (Mel2Speech)
