@@ -2,12 +2,12 @@ CUDA_VISIBLE_DEVICES='3' python3 main.py --dataset_name indictts \
     --language ta \
     --speaker male \
     --use_speaker_embedding f \
-    --model glowtts \
-    --batch_size 16 \
+    --model tacotron2 \
+    --batch_size 64 \
     --batch_size_eval 16 \
     --batch_group_size 5 \
     --max_audio_len 441000 \
     --max_text_len 400 \
     --epochs 10000 \
-    --mixed_precision t \
-    --run_description "glowtts_ta_male"
+    --mixed_precision f \
+    --run_description "tacotron2_ta_male"
