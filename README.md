@@ -2,7 +2,7 @@
 
 Text-to-speech in Indian languages using CoquiTTS. The models are trained using IndicTTS dataset.
 
-### Supported Acoustics Models:
+### Supported Acoustic Models:
 1. GlowTTS (Text2Mel)
 2. VITS (Text2Speech)
 
@@ -55,5 +55,5 @@ cp TTS/TTS/bin/synthesize.py to the local TTS installation # added multiple outp
 2. Analyze IndicTTS dataset to check TTS suitability using [dataset_analysis/AnalyzeDataset.ipynb](./dataset_analysis/AnalyzeDataset.ipynb)
 
 ### Running Steps:
-1. Set the configuration with [main.py](./main.py), [vocoder.py](./vocoder.py), [configs](./configs) and [run.sh](./run.sh).
+1. Set the configuration with [main.py](./main.py), [vocoder.py](./vocoder.py), [configs](./configs) and [run.sh](./run.sh). Make sure to update the CUDA_VISIBLE_DEVICES in all these files.
 2. Train and test by executing `sh run.sh`
