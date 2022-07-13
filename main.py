@@ -201,6 +201,8 @@ def main(args):
             spec_gain=1.0,
             log_func="np.log",
         )
+    # overriding specific audio configs to match the HiFi GAN vocoder
+    audio_config = BaseAudioConfig()
 
     # set characters config
     if args.model in ['glowtts', 'fastpitch']:
