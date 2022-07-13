@@ -1,1 +1,1 @@
-sh configs/train_tacotron2.sh
+sh configs/train_fastpitch.sh

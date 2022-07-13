@@ -2,16 +2,21 @@ import argparse
 import os
 import string
 
+import numpy as np
 import pandas as pd
+import torch
 
 from argparse import Namespace
+from torch.utils.data import DataLoader
 from trainer import Trainer, TrainerArgs
+from TTS.config import load_config
 from TTS.tts.configs.fast_pitch_config import FastPitchConfig
 from TTS.tts.configs.glow_tts_config import GlowTTSConfig
-from TTS.tts.configs.shared_configs import BaseAudioConfig, BaseDatasetConfig, BaseTTSConfig
+from TTS.tts.configs.shared_configs import BaseAudioConfig, BaseDatasetConfig
 from TTS.tts.configs.tacotron2_config import Tacotron2Config
 from TTS.tts.configs.vits_config import VitsConfig
-from TTS.tts.datasets import load_tts_samples
+from TTS.tts.datasets import TTSDataset, load_tts_samples
+from TTS.tts.models import setup_model
 from TTS.tts.models.forward_tts import ForwardTTS, ForwardTTSArgs
 from TTS.tts.models.glow_tts import GlowTTS
 from TTS.tts.models.tacotron2 import Tacotron2
@@ -19,7 +24,8 @@ from TTS.tts.models.vits import Vits, VitsArgs
 from TTS.tts.utils.speakers import SpeakerManager
 from TTS.tts.utils.text.tokenizer import TTSTokenizer
 from TTS.utils.audio import AudioProcessor
-from TTS.utils.manage import ModelManager
+from TTS.utils.io import load_checkpoint
+from tqdm.auto import tqdm
 
 from utils import str2bool
 
@@ -29,7 +35,7 @@ def get_arg_parser():
 
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts'])
-    parser.add_argument('--dataset_path', default='../../datasets/indictts/{}', type=str)
+    parser.add_argument('--dataset_path', default='/home/speech/ttsteam/datasets/indictts/{}', type=str)
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
@@ -46,6 +52,10 @@ def get_arg_parser():
     parser.add_argument('--model', default='glowtts', choices=['glowtts', 'vits', 'fastpitch', 'tacotron2'])
     parser.add_argument('--use_speaker_embedding', default=True, type=str2bool)
     parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
+    parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
+    parser.add_argument('--attention_mask_model_path', default='output/store/ta/glowtts/best_model.pth', type=str) # set if use_aligner==False and use_pre_computed_alignments==False
+    parser.add_argument('--attention_mask_config_path', default='output/store/ta/glowtts/config.json', type=str) # set if use_aligner==False and use_pre_computed_alignments==False
+    parser.add_argument('--attention_mask_meta_save_path', default='/home/speech/ttsteam/datasets/indictts/{}/meta_file_attn_mask.txt', type=str)  # set if use_aligner==False
 
     # training parameters
     parser.add_argument('--epochs', default=1000, type=int)
@@ -63,8 +73,8 @@ def get_arg_parser():
     parser.add_argument('--test_delay_epochs', default=0, type=int)   
     parser.add_argument('--print_step', default=25, type=int)
     parser.add_argument('--plot_step', default=100, type=int)
-    parser.add_argument('--save_step', default=1000, type=int)
-    parser.add_argument('--save_n_checkpoints', default=5, type=int)
+    parser.add_argument('--save_step', default=5000, type=int)
+    parser.add_argument('--save_n_checkpoints', default=3, type=int)
     parser.add_argument('--save_best_after', default=1000, type=int)
     parser.add_argument('--target_loss', default=None)
     parser.add_argument('--print_eval', default=False, type=str2bool)
@@ -154,6 +164,109 @@ def get_test_sentences(language):
             ]
 
     return test_sentences
+
+
+def compute_attention_masks(model_path, config_path, meta_save_path, data_path, dataset_metafile, args, use_cuda=True):
+    dataset_name = args.dataset_name
+    language = args.language
+    batch_size = 16
+    meta_save_path = meta_save_path.format(language)
+
+    C = load_config(config_path)
+    ap = AudioProcessor(**C.audio)
+
+    # load the model
+    model = setup_model(C)
+    model, _ = load_checkpoint(model, model_path, use_cuda, True)
+
+    # data loader
+    dataset_config = BaseDatasetConfig(
+        name=dataset_name, 
+        meta_file_train=dataset_metafile, 
+        path=data_path, 
+        language=language
+    )
+    samples, _ = load_tts_samples(
+        dataset_config, 
+        eval_split=False,
+        formatter=formatter_indictts
+    )
+
+    dataset = TTSDataset(
+        outputs_per_step=model.decoder.r if "r" in vars(model.decoder) else 1,
+        compute_linear_spec=False,
+        ap=ap,
+        samples=samples,
+        tokenizer=model.tokenizer,
+        phoneme_cache_path=C.phoneme_cache_path,
+    )
+    
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        num_workers=4,
+        collate_fn=dataset.collate_fn,
+        shuffle=False,
+        drop_last=False,
+    )
+
+    # compute attentions
+    file_paths = []
+    with torch.no_grad():
+        for data in tqdm(loader):
+            # setup input data
+            text_input = data["token_id"]
+            text_lengths = data["token_id_lengths"]
+            #linear_input = data[3]
+            mel_input = data["mel"]
+            mel_lengths = data["mel_lengths"]
+            #stop_targets = data[6]
+            item_idxs = data["item_idxs"]
+
+            # dispatch data to GPU
+            if use_cuda:
+                text_input = text_input.cuda()
+                text_lengths = text_lengths.cuda()
+                mel_input = mel_input.cuda()
+                mel_lengths = mel_lengths.cuda()
+
+            model_outputs = model.forward(text_input, text_lengths, mel_input, mel_lengths)
+
+            alignments = model_outputs["alignments"].detach()
+            for idx, alignment in enumerate(alignments):
+                item_idx = item_idxs[idx]
+                # interpolate if r > 1
+                alignment = (
+                    torch.nn.functional.interpolate(
+                        alignment.transpose(0, 1).unsqueeze(0),
+                        size=None,
+                        scale_factor=model.decoder.r if "r" in vars(model.decoder) else 1,
+                        mode="nearest",
+                        align_corners=None,
+                        recompute_scale_factor=None,
+                    )
+                    .squeeze(0)
+                    .transpose(0, 1)
+                )
+                # remove paddings
+                alignment = alignment[: mel_lengths[idx], : text_lengths[idx]].cpu().numpy()
+                # set file paths
+                wav_file_name = os.path.basename(item_idx)
+                align_file_name = os.path.splitext(wav_file_name)[0] + "_attn.npy"
+                file_path = item_idx.replace(wav_file_name, align_file_name)
+                # save output
+                wav_file_abs_path = os.path.abspath(item_idx)
+                file_abs_path = os.path.abspath(file_path)
+                file_paths.append([wav_file_abs_path, file_abs_path])
+                np.save(file_path, alignment)
+
+        # output metafile
+        with open(meta_save_path, "w", encoding="utf-8") as f:
+            for p in file_paths:
+                f.write(f"{p[0]}|{p[1]}\n")
+        print(f" >> Metafile created: {meta_save_path}")
+
+    return True
     
 
 def main(args):
@@ -328,12 +441,14 @@ def main(args):
         )
 
         if not config.model_args.use_aligner:
-            manager = ModelManager()
-            model_path, config_path, _ = manager.download_model("tts_models/en/ljspeech/tacotron2-DCA")
-            # TODO: make compute_attention python callable
-            os.system(
-                f"python TTS/bin/compute_attention_masks.py --model_path {model_path} --config_path {config_path} --dataset ljspeech --dataset_metafile metadata.csv --data_path ./recipes/ljspeech/LJSpeech-1.1/  --use_cuda true"
-            )
+            dataset_config.meta_file_attn_mask = args.attention_mask_meta_save_path.format(args.language)
+            if not args.use_pre_computed_alignments:
+                print("[START] Computing attention masks...")
+                dataset_path = args.dataset_path.format(args.language)
+                metafile = 'metadata.csv'
+                compute_attention_masks(args.attention_mask_model_path, args.attention_mask_config_path, args.attention_mask_meta_save_path, dataset_path, metafile, args)
+                print("[START] Computing attention masks...")
+        
     elif args.model == "tacotron2":
         config = Tacotron2Config(
             **base_tts_config,
