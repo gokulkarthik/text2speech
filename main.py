@@ -330,6 +330,8 @@ def main(args):
             ref_level_db=20,
             preemphasis=0.0,
         )
+    # overriding specific audio configs to match the HiFi GAN vocoder
+    audio_config = BaseAudioConfig()
 
     # set characters config
     if args.model in ['glowtts', 'fastpitch', 'tacotron2']:
