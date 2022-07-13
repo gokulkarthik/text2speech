@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES='0' python3 main.py --dataset_name indictts \
+CUDA_VISIBLE_DEVICES='3' python3 main.py --dataset_name indictts \
     --language ta \
     --speaker male \
     --use_speaker_embedding f \
