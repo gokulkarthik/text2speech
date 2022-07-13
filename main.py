@@ -35,7 +35,7 @@ def get_arg_parser():
 
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts'])
-    parser.add_argument('--dataset_path', default='/home/speech/ttsteam/datasets/indictts/{}', type=str)
+    parser.add_argument('--dataset_path', default='/home/gokulkarthikk/datasets/indictts/{}', type=str)
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
@@ -55,7 +55,7 @@ def get_arg_parser():
     parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
     parser.add_argument('--attention_mask_model_path', default='output/store/ta/glowtts/best_model.pth', type=str) # set if use_aligner==False and use_pre_computed_alignments==False
     parser.add_argument('--attention_mask_config_path', default='output/store/ta/glowtts/config.json', type=str) # set if use_aligner==False and use_pre_computed_alignments==False
-    parser.add_argument('--attention_mask_meta_save_path', default='/home/speech/ttsteam/datasets/indictts/{}/meta_file_attn_mask.txt', type=str)  # set if use_aligner==False
+    parser.add_argument('--attention_mask_meta_save_path', default='/home/gokulkarthikk/datasets/indictts/{}/meta_file_attn_mask.txt', type=str)  # set if use_aligner==False
 
     # training parameters
     parser.add_argument('--epochs', default=1000, type=int)
@@ -303,35 +303,35 @@ def main(args):
         audio_config = BaseAudioConfig()
     elif args.model == 'vits':
         audio_config = BaseAudioConfig(
-            log_func="np.log",
-            spec_gain=1.0,
-            signal_norm=False,
-            do_amp_to_db_linear=False,
+            # log_func="np.log",
+            # spec_gain=1.0,
+            # signal_norm=False,
+            # do_amp_to_db_linear=False,
         )
     elif args.model == 'fastpitch':
         audio_config = BaseAudioConfig(
             trim_db=60.0,
-            signal_norm=False,
-            mel_fmin=0.0,
-            mel_fmax=8000,
-            spec_gain=1.0,
-            log_func="np.log",
+            # signal_norm=False,
+            # mel_fmin=0.0,
+            # mel_fmax=8000,
+            # spec_gain=1.0,
+            # log_func="np.log",
         )
     elif args.model == 'tacotron2':
         audio_config = BaseAudioConfig(
-            sample_rate=22050,
-            do_trim_silence=True,
-            trim_db=60.0,
-            signal_norm=False,
-            mel_fmin=0.0,
-            mel_fmax=8000,
-            spec_gain=1.0,
-            log_func="np.log",
-            ref_level_db=20,
-            preemphasis=0.0,
+            # sample_rate=22050,
+            # do_trim_silence=True,
+            # trim_db=60.0,
+            # signal_norm=False,
+            # mel_fmin=0.0,
+            # mel_fmax=8000,
+            # spec_gain=1.0,
+            # log_func="np.log",
+            # ref_level_db=20,
+            # preemphasis=0.0,
         )
     # overriding specific audio configs to match the HiFi GAN vocoder
-    audio_config = BaseAudioConfig()
+    #audio_config = BaseAudioConfig()
 
     # set characters config
     if args.model in ['glowtts', 'fastpitch', 'tacotron2']:

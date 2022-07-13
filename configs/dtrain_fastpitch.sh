@@ -2,6 +2,8 @@ CUDA_VISIBLE_DEVICES='0,1,2,3' python3 -m trainer.distribute --script main.py --
     --language ta \
     --speaker male \
     --use_speaker_embedding f \
+    --use_aligner f \
+    --use_pre_computed_alignments t \
     --model fastpitch \
     --batch_size 8 \
     --batch_size_eval 8 \
@@ -9,5 +11,5 @@ CUDA_VISIBLE_DEVICES='0,1,2,3' python3 -m trainer.distribute --script main.py --
     --max_audio_len 441000 \
     --max_text_len 400 \
     --epochs 10000 \
-    --mixed_precision f \
-    --run_description "fastpitch_ta_male"
+    --mixed_precision t \
+    --run_description "fastpitch_ta_male with glowtts alignments"
