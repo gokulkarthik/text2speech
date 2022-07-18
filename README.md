@@ -7,13 +7,15 @@ Text-to-speech in Indian languages using CoquiTTS. The models are trained using 
 2. VITS (Text2Speech)
 3. FastPitch (Text2Mel)
 4. Tactoron2 (Text2Mel)
+5. AlignTTS (Text2Mel)
 
 ### Supported Vocoders:
 1. HiFiGAN (Mel2Speech)
 
 ### Supported Languages:
-1. Tamil (ta)
-2. Hindi (hi)
+1. English (en)
+2. Tamil (ta)
+3. Hindi (hi)
 
 Reference: [https://github.com/coqui-ai/TTS](https://github.com/coqui-ai/TTS)
 
