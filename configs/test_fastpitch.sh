@@ -6,9 +6,9 @@ cp output/ta_fastpitch_indictts_male-July-08-2022_01+12PM-d4b542f/config.json ou
 python3 -m TTS.bin.synthesize --text "../../datasets/indictts/ta/metadata_test_male.csv" \
     --model_path output/store/ta/fastpitch/best_model.pth \
     --config_path output/store/ta/fastpitch/config.json \
-    --vocoder_path output_vocoder/store/ta/hifigan/checkpoint_157000.pth \
+    --vocoder_path output_vocoder/store/ta/hifigan/checkpoint_633000.pth \
     --vocoder_config_path output_vocoder/store/ta/hifigan/config.json \
-    --out_path output_wavs/ta_fastpitch_male  
+    --out_path output_wavs/ta_male_fastpitch_hifi 
 
 # python3 scripts/evaluate_mcd.py \
 #     output_wavs/ta_glowtts_female/ \
