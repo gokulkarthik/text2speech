@@ -12,7 +12,7 @@ from trainer import Trainer, TrainerArgs
 from TTS.config import load_config
 from TTS.tts.configs.fast_pitch_config import FastPitchConfig
 from TTS.tts.configs.glow_tts_config import GlowTTSConfig
-from TTS.tts.configs.shared_configs import BaseAudioConfig, BaseDatasetConfig
+from TTS.tts.configs.shared_configs import BaseAudioConfig, BaseDatasetConfig, CharactersConfig
 from TTS.tts.configs.tacotron2_config import Tacotron2Config
 from TTS.tts.configs.vits_config import VitsConfig
 from TTS.tts.datasets import TTSDataset, load_tts_samples
@@ -296,70 +296,30 @@ def main(args):
     texts = "".join(item["text"] for item in samples)
     lang_chars = sorted(list(set(texts)))
     print(lang_chars, len(lang_chars))
-    del samples
+    del samples, texts
 
     # set audio config
-    if args.model == 'glowtts':
-        audio_config = BaseAudioConfig()
-    elif args.model == 'vits':
-        audio_config = BaseAudioConfig(
-            # log_func="np.log",
-            # spec_gain=1.0,
-            # signal_norm=False,
-            # do_amp_to_db_linear=False,
-        )
-    elif args.model == 'fastpitch':
-        audio_config = BaseAudioConfig(
+    audio_config = BaseAudioConfig(
             trim_db=60.0,
-            # signal_norm=False,
-            # mel_fmin=0.0,
-            # mel_fmax=8000,
-            # spec_gain=1.0,
-            # log_func="np.log",
+            mel_fmin=0.0,
+            mel_fmax=8000,
+            log_func="np.log",
+            spec_gain=1.0,
+            signal_norm=False,
         )
-    elif args.model == 'tacotron2':
-        audio_config = BaseAudioConfig(
-            # sample_rate=22050,
-            # do_trim_silence=True,
-            # trim_db=60.0,
-            # signal_norm=False,
-            # mel_fmin=0.0,
-            # mel_fmax=8000,
-            # spec_gain=1.0,
-            # log_func="np.log",
-            # ref_level_db=20,
-            # preemphasis=0.0,
-        )
-    # overriding specific audio configs to match the HiFi GAN vocoder
-    #audio_config = BaseAudioConfig()
 
     # set characters config
-    if args.model in ['glowtts', 'fastpitch', 'tacotron2']:
-        from TTS.tts.configs.shared_configs import CharactersConfig
-        characters_config = CharactersConfig(
-            characters_class="TTS.tts.models.vits.VitsCharacters",
-            pad="<PAD>",
-            eos="<EOS>",
-            bos="<BOS>",
-            blank="<BLNK>",
-            #characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(lang_chars),
-            characters="".join(lang_chars),
-            punctuations="!¡'(),-.:;¿? ",
-            phonemes=None
-        )
-    elif args.model in ['vits', 'fastpitch']:
-        from TTS.tts.models.vits import CharactersConfig
-        characters_config = CharactersConfig(
-            characters_class="TTS.tts.models.vits.VitsCharacters",
-            pad="<PAD>",
-            eos="<EOS>",
-            bos="<BOS>",
-            blank="<BLNK>",
-            #characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(lang_chars),
-            characters="".join(lang_chars),
-            punctuations="!¡'(),-.:;¿? ",
-            phonemes=None
-        )
+    characters_config = CharactersConfig(
+        characters_class="TTS.tts.models.vits.VitsCharacters",
+        pad="<PAD>",
+        eos="<EOS>",
+        bos="<BOS>",
+        blank="<BLNK>",
+        #characters="!¡'(),-.:;¿?$%&‘’‚“`”„" + "".join(lang_chars),
+        characters="".join(lang_chars),
+        punctuations="!¡'(),-.:;¿? ",
+        phonemes=None
+    )
 
     # set base tts config
     base_tts_config = Namespace(
