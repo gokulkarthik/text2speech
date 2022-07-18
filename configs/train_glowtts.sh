@@ -1,13 +1,15 @@
-CUDA_VISIBLE_DEVICES='3' python3 main.py --dataset_name indictts \
+CUDA_VISIBLE_DEVICES='0' python3 main.py --dataset_name indictts \
     --language ta \
     --speaker male \
-    --use_speaker_embedding f \
+    --max_audio_len 441000 \
+    --max_text_len 400 \
     --model glowtts \
+    --use_speaker_embedding f \
     --batch_size 16 \
     --batch_size_eval 16 \
     --batch_group_size 5 \
-    --max_audio_len 441000 \
-    --max_text_len 400 \
-    --epochs 10000 \
+    --num_workers 8 \
+    --num_workers_eval 8 \
+    --epochs 5000 \
     --mixed_precision t \
     --run_description "glowtts_ta_male"

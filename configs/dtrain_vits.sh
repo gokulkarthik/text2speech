@@ -1,15 +1,15 @@
 CUDA_VISIBLE_DEVICES='0,1,2,3' python3 -m trainer.distribute --script main.py --dataset_name indictts \
     --language ta \
     --speaker male \
+    --max_audio_len 441000 \
+    --max_text_len 400 \
+    --model vits \
     --use_speaker_embedding f \
-    --model glowtts \
-    --batch_size 8 \
-    --batch_size_eval 8 \
+    --batch_size 16 \
+    --batch_size_eval 16 \
     --batch_group_size 5 \
-    --num_workers 16 \
-    --num_workers_eval 16 \
-    --epochs 1000 \
-    --port 54321 \
-    --print_step 100 \
-    --plot_step 100 \
+    --num_workers 8 \
+    --num_workers_eval 8 \
+    --epochs 5000 \
+    --mixed_precision t \
     --run_description "vits_ta_male"

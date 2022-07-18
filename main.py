@@ -10,6 +10,7 @@ from argparse import Namespace
 from torch.utils.data import DataLoader
 from trainer import Trainer, TrainerArgs
 from TTS.config import load_config
+from TTS.tts.configs.align_tts_config import AlignTTSConfig
 from TTS.tts.configs.fast_pitch_config import FastPitchConfig
 from TTS.tts.configs.glow_tts_config import GlowTTSConfig
 from TTS.tts.configs.shared_configs import BaseAudioConfig, BaseDatasetConfig, CharactersConfig
@@ -17,6 +18,7 @@ from TTS.tts.configs.tacotron2_config import Tacotron2Config
 from TTS.tts.configs.vits_config import VitsConfig
 from TTS.tts.datasets import TTSDataset, load_tts_samples
 from TTS.tts.models import setup_model
+from TTS.tts.models.align_tts import AlignTTS
 from TTS.tts.models.forward_tts import ForwardTTS, ForwardTTSArgs
 from TTS.tts.models.glow_tts import GlowTTS
 from TTS.tts.models.tacotron2 import Tacotron2
@@ -49,7 +51,7 @@ def get_arg_parser():
     parser.add_argument('--max_text_len', default=float("inf")) # 400
 
     # model parameters
-    parser.add_argument('--model', default='glowtts', choices=['glowtts', 'vits', 'fastpitch', 'tacotron2'])
+    parser.add_argument('--model', default='glowtts', choices=['glowtts', 'vits', 'fastpitch', 'tacotron2', 'aligntts'])
     parser.add_argument('--use_speaker_embedding', default=True, type=str2bool)
     parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
     parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
@@ -425,6 +427,10 @@ def main(args):
             attention_type="dynamic_convolution",
             double_decoder_consistency=False,
         )
+    elif args.model == "aligntts":
+        config = AlignTTSConfig(
+            **base_tts_config,
+        )
 
     # set preprocessors
     ap = AudioProcessor.init_from_config(config)
@@ -466,6 +472,8 @@ def main(args):
         model = ForwardTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
     elif args.model == 'tacotron2':
         model = Tacotron2(config, ap, tokenizer)
+    elif args.model == 'aligntts':
+        model = AlignTTS(config, ap, tokenizer)
 
     # set trainer
     trainer = Trainer(
