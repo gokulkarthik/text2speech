@@ -300,13 +300,13 @@ def main(args):
 
     # set audio config
     audio_config = BaseAudioConfig(
-            trim_db=60.0,
-            mel_fmin=0.0,
-            mel_fmax=8000,
-            log_func="np.log",
-            spec_gain=1.0,
-            signal_norm=False,
-        )
+        trim_db=60.0,
+        mel_fmin=0.0,
+        mel_fmax=8000,
+        log_func="np.log",
+        spec_gain=1.0,
+        signal_norm=False,
+    )
 
     # set characters config
     characters_config = CharactersConfig(

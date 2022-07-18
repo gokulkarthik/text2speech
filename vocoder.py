@@ -73,6 +73,14 @@ def filter_speaker(samples, speaker, dataset_name='indictts', language='ta'):
 def main(args):
 
     config = HifiganConfig(
+        audio=BaseAudioConfig(
+            trim_db=60.0,
+            mel_fmin=0.0,
+            mel_fmax=8000,
+            log_func="np.log",
+            spec_gain=1.0,
+            signal_norm=False,
+        )
         batch_size=args.batch_size,
         eval_batch_size=args.batch_size_eval,
         num_loader_workers=args.num_workers,
