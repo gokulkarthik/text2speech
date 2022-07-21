@@ -36,9 +36,9 @@ def get_arg_parser():
     parser = argparse.ArgumentParser(description='Traning and evaluation script for acoustic / e2e TTS model ')
 
     # dataset parameters
-    parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts'])
-    parser.add_argument('--dataset_path', default='/home/gokulkarthikk/datasets/indictts/{}', type=str)
+    parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
+    parser.add_argument('--dataset_path', default='/home/gokulkarthikk/datasets/{}/{}', type=str) # dataset_name, language
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
@@ -285,7 +285,7 @@ def main(args):
         name=args.dataset_name, 
         meta_file_train=meta_file_train, 
         meta_file_val=meta_file_val,
-        path=args.dataset_path.format(args.language), 
+        path=args.dataset_path.format(args.dataset_name, args.language), 
         language=args.language
     )
 
@@ -459,21 +459,20 @@ def main(args):
     # load model
     if args.model == 'glowtts':
         model = GlowTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
-        if args.speaker == 'all':
-            config.num_speakers = speaker_manager.num_speakers
-        else:
-            config.num_speakers = 1
     elif args.model == 'vits':
         model = Vits(config, ap, tokenizer, speaker_manager=speaker_manager)
-        if args.speaker == 'all':
-            config.num_speakers = speaker_manager.num_speakers
-            config.model_args.num_speakers = speaker_manager.num_speakers
     elif args.model == 'fastpitch':
         model = ForwardTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
     elif args.model == 'tacotron2':
-        model = Tacotron2(config, ap, tokenizer)
+        model = Tacotron2(config, ap, tokenizer, speaker_manager=speaker_manager)
     elif args.model == 'aligntts':
-        model = AlignTTS(config, ap, tokenizer)
+        model = AlignTTS(config, ap, tokenizer, speaker_manager=speaker_managre)
+    if args.speaker == 'all':
+        config.num_speakers = speaker_manager.num_speakers
+        if hasattr(config.model_args, num_speakers)
+            config.model_args.num_speakers = speaker_manager.num_speakers
+    else:
+        config.num_speakers = 1
 
     # set trainer
     trainer = Trainer(

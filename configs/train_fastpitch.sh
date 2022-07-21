@@ -1,10 +1,10 @@
-CUDA_VISIBLE_DEVICES='0' python3 main.py --dataset_name indictts \
+CUDA_VISIBLE_DEVICES='0' python3 main.py --dataset_name googletts \
     --language ta \
-    --speaker male \
+    --speaker all \
     --max_audio_len 441000 \
     --max_text_len 400 \
     --model fastpitch \
-    --use_speaker_embedding f \
+    --use_speaker_embedding t \
     --use_aligner t \
     --use_pre_computed_alignments f \
     --batch_size 16 \
