@@ -53,11 +53,13 @@ def get_arg_parser():
     # model parameters
     parser.add_argument('--model', default='glowtts', choices=['glowtts', 'vits', 'fastpitch', 'tacotron2', 'aligntts'])
     parser.add_argument('--use_speaker_embedding', default=True, type=str2bool)
+    parser.add_argument('--use_style_encoder', default=False, type=str2bool)
     parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
     parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
-    parser.add_argument('--attention_mask_model_path', default='output/store/ta/glowtts/best_model.pth', type=str) # set if use_aligner==False and use_pre_computed_alignments==False #CHANGE
-    parser.add_argument('--attention_mask_config_path', default='output/store/ta/glowtts/config.json', type=str) # set if use_aligner==False and use_pre_computed_alignments==False #CHANGE
-    parser.add_argument('--attention_mask_meta_save_path', default='/home/gokulkarthikk/datasets/{}/{}/meta_file_attn_mask.txt', type=str) # dataset_name, language # set if use_aligner==False #CHANGE
+    parser.add_argument('--pretrained_checkpoint_path', default=None, type=str) # to load pretrained weights
+    parser.add_argument('--attention_mask_model_path', default='output/store/ta/fastpitch/best_model.pth', type=str) # set if use_aligner==False and use_pre_computed_alignments==False #CHANGE
+    parser.add_argument('--attention_mask_config_path', default='output/store/ta/fastpitch/config.json', type=str) # set if use_aligner==False and use_pre_computed_alignments==False #CHANGE
+    parser.add_argument('--attention_mask_meta_file_name', default='meta_file_attn_mask.txt', type=str) # dataset_name, language # set if use_aligner==False #CHANGE
 
     # training parameters
     parser.add_argument('--epochs', default=1000, type=int)
@@ -172,7 +174,7 @@ def compute_attention_masks(model_path, config_path, meta_save_path, data_path, 
     dataset_name = args.dataset_name
     language = args.language
     batch_size = 16
-    meta_save_path = meta_save_path.format(language)
+    meta_save_path = meta_save_path.format(dataset_name, language)
 
     C = load_config(config_path)
     ap = AudioProcessor(**C.audio)
@@ -232,7 +234,13 @@ def compute_attention_masks(model_path, config_path, meta_save_path, data_path, 
                 mel_input = mel_input.cuda()
                 mel_lengths = mel_lengths.cuda()
 
-            model_outputs = model.forward(text_input, text_lengths, mel_input, mel_lengths)
+            if C.model == 'glowtts':
+                model_outputs = model.forward(text_input, text_lengths, mel_input, mel_lengths)
+                #model_outputs = model.inference(text_input, text_lengths, mel_input, mel_lengths)
+            elif C.model == 'fast_pitch':
+                model_outputs = model.inference2(text_input, text_lengths)
+            else:
+                raise ValueError
 
             alignments = model_outputs["alignments"].detach()
             for idx, alignment in enumerate(alignments):
@@ -405,13 +413,13 @@ def main(args):
         )
 
         if not config.model_args.use_aligner:
-            dataset_config.meta_file_attn_mask = args.attention_mask_meta_save_path.format(args.dataset_name, args.language)
+            metafile = 'metadata.csv'
+            attention_mask_meta_save_path = f'{args.dataset_path}/{args.attention_mask_meta_file_name}'
             if not args.use_pre_computed_alignments:
                 print("[START] Computing attention masks...")
-                dataset_path = args.dataset_path.format(args.language)
-                metafile = 'metadata.csv'
-                compute_attention_masks(args.attention_mask_model_path, args.attention_mask_config_path, args.attention_mask_meta_save_path, dataset_path, metafile, args)
-                print("[START] Computing attention masks...")
+                compute_attention_masks(args.attention_mask_model_path, args.attention_mask_config_path, attention_mask_meta_save_path, args.dataset_path, metafile, args)
+                print("[END] Computing attention masks")
+            dataset_config.meta_file_attn_mask = attention_mask_meta_save_path
         
     elif args.model == "tacotron2":
         config = Tacotron2Config(
@@ -473,6 +481,23 @@ def main(args):
             config.model_args.num_speakers = speaker_manager.num_speakers
     else:
         config.num_speakers = 1
+    if args.pretrained_checkpoint_path:
+        checkpoint_state = torch.load(args.pretrained_checkpoint_path)['model']
+        print(" > Partial model initialization...")
+        model_dict = model.state_dict()
+        for k, v in checkpoint_state.items():
+            if k not in model_dict:
+                print(" | > Layer missing in the model definition: {}".format(k))
+        # 1. filter out unnecessary keys
+        pretrained_dict = {k: v for k, v in checkpoint_state.items() if k in model_dict}
+        # 2. filter out different size layers
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if v.numel() == model_dict[k].numel()}
+        # 3. overwrite entries in the existing state dict
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
+        print(" | > {} / {} layers are restored.".format(len(pretrained_dict), len(model_dict)))
+        missed_keys = set(model_dict.keys())-set(pretrained_dict.keys())
+        print(" | > Missed Keys:", missed_keys)
 
     # set trainer
     trainer = Trainer(
@@ -493,6 +518,13 @@ if __name__ == '__main__':
 
     parser = get_arg_parser()
     args = parser.parse_args()
+
+    args.dataset_path = args.dataset_path.format(args.dataset_name ,args.language)
+    if args.dataset_name == 'googletts':
+        args.dataset_path += '/processed'
+
+    if args.use_style_encoder:
+        assert args.use_speaker_embedding
 
     if not os.path.exists(args.output_path):
         os.makedirs(args.output_path)
