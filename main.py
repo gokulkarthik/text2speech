@@ -466,10 +466,10 @@ def main(args):
     elif args.model == 'tacotron2':
         model = Tacotron2(config, ap, tokenizer, speaker_manager=speaker_manager)
     elif args.model == 'aligntts':
-        model = AlignTTS(config, ap, tokenizer, speaker_manager=speaker_managre)
+        model = AlignTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
     if args.speaker == 'all':
         config.num_speakers = speaker_manager.num_speakers
-        if hasattr(config.model_args, num_speakers)
+        if hasattr(config.model_args, 'num_speakers'):
             config.model_args.num_speakers = speaker_manager.num_speakers
     else:
         config.num_speakers = 1

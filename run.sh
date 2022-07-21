@@ -1,1 +1,1 @@
-sh configs/dtrain_fastpitch.sh
+sh configs/train_fastpitch.sh
