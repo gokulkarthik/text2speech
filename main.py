@@ -38,7 +38,7 @@ def get_arg_parser():
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
-    parser.add_argument('--dataset_path', default='/home/gokulkarthikk/datasets/{}/{}', type=str) # dataset_name, language
+    parser.add_argument('--dataset_path', default='/home/gokulkarthikk/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
@@ -55,9 +55,9 @@ def get_arg_parser():
     parser.add_argument('--use_speaker_embedding', default=True, type=str2bool)
     parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
     parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
-    parser.add_argument('--attention_mask_model_path', default='output/store/ta/glowtts/best_model.pth', type=str) # set if use_aligner==False and use_pre_computed_alignments==False
-    parser.add_argument('--attention_mask_config_path', default='output/store/ta/glowtts/config.json', type=str) # set if use_aligner==False and use_pre_computed_alignments==False
-    parser.add_argument('--attention_mask_meta_save_path', default='/home/gokulkarthikk/datasets/indictts/{}/meta_file_attn_mask.txt', type=str)  # set if use_aligner==False
+    parser.add_argument('--attention_mask_model_path', default='output/store/ta/glowtts/best_model.pth', type=str) # set if use_aligner==False and use_pre_computed_alignments==False #CHANGE
+    parser.add_argument('--attention_mask_config_path', default='output/store/ta/glowtts/config.json', type=str) # set if use_aligner==False and use_pre_computed_alignments==False #CHANGE
+    parser.add_argument('--attention_mask_meta_save_path', default='/home/gokulkarthikk/datasets/{}/{}/meta_file_attn_mask.txt', type=str) # dataset_name, language # set if use_aligner==False #CHANGE
 
     # training parameters
     parser.add_argument('--epochs', default=1000, type=int)
@@ -73,11 +73,11 @@ def get_arg_parser():
     parser.add_argument('--run_description', default='None', type=str)
     parser.add_argument('--output_path', default='output', type=str)
     parser.add_argument('--test_delay_epochs', default=0, type=int)   
-    parser.add_argument('--print_step', default=25, type=int)
+    parser.add_argument('--print_step', default=100, type=int)
     parser.add_argument('--plot_step', default=100, type=int)
-    parser.add_argument('--save_step', default=5000, type=int)
-    parser.add_argument('--save_n_checkpoints', default=3, type=int)
-    parser.add_argument('--save_best_after', default=1000, type=int)
+    parser.add_argument('--save_step', default=10000, type=int)
+    parser.add_argument('--save_n_checkpoints', default=1, type=int)
+    parser.add_argument('--save_best_after', default=10000, type=int)
     parser.add_argument('--target_loss', default=None)
     parser.add_argument('--print_eval', default=False, type=str2bool)
     parser.add_argument('--run_eval', default=True, type=str2bool)
@@ -405,7 +405,7 @@ def main(args):
         )
 
         if not config.model_args.use_aligner:
-            dataset_config.meta_file_attn_mask = args.attention_mask_meta_save_path.format(args.language)
+            dataset_config.meta_file_attn_mask = args.attention_mask_meta_save_path.format(args.dataset_name, args.language)
             if not args.use_pre_computed_alignments:
                 print("[START] Computing attention masks...")
                 dataset_path = args.dataset_path.format(args.language)
