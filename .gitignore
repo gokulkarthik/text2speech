@@ -4,4 +4,6 @@ output/*
 output_vocoder/*
 !output_vocoder/store1
 wandb/
-output_wavs
+output_wavs/
+output_speaker_encoder/
+temp.py

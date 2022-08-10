@@ -37,7 +37,7 @@ def get_arg_parser():
 
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
-    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
+    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'all'])
     parser.add_argument('--dataset_path', default='/home/gokulkarthikk/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
@@ -52,7 +52,14 @@ def get_arg_parser():
 
     # model parameters
     parser.add_argument('--model', default='glowtts', choices=['glowtts', 'vits', 'fastpitch', 'tacotron2', 'aligntts'])
+    parser.add_argument('--hidden_channels', default=512, type=int)
     parser.add_argument('--use_speaker_embedding', default=True, type=str2bool)
+    parser.add_argument('--use_d_vector_file', default=False, type=str2bool)
+    parser.add_argument('--d_vector_file', default="", type=str)
+    parser.add_argument('--d_vector_dim', default=512, type=int)
+    parser.add_argument('--speaker_encoder_model_path', default='', type=str) 
+    parser.add_argument('--speaker_encoder_config_path', default='', type=str) 
+    parser.add_argument('--use_speaker_encoder_as_loss', default=False, type=str2bool) # only supported in vits, fastpitch
     parser.add_argument('--use_style_encoder', default=False, type=str2bool)
     parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
     parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
@@ -165,6 +172,14 @@ def get_test_sentences(language):
         test_sentences = [
                 "Brazilian police say a suspect has confessed to burying the bodies of missing British journalist Dom Phillips and indigenous expert Bruno Pereira.",
                 "Protests have erupted in India over a new reform scheme to hire soldiers for a fixed term for the armed forces",
+            ]
+
+    elif language == 'all':
+        test_sentences = [
+                "ஒரு விஞ்ஞானி தம் ஆராய்ச்சிகளை எவ்வளவோ கணக்காகவும் முன் யோசனையின் பேரிலும் நுட்பமாகவும் நடத்துகிறார்.",
+                "ఇక బిన్ లాడెన్ తర్వాతి అగ్ర నాయకులు అయ్‌మన్ అల్ జవహరి తదితర ముఖ్యుల 'తలలు నరికి ఈటెలకు గుచ్చండి' అనేవి ఇతర ఆదేశాలు.",
+                "ಕೆಲ ದಿನಗಳಿಂದ ಮಳೆ ಕಡಿಮೆಯಾದಂತೆ ತೋರಿದ್ದರೂ ಕಳೆದ ಎರಡು ದಿನಗಳಲ್ಲಿ ರಾಜ್ಯದ ಹಲವೆಡೆ ಮತ್ತೆ ಮಳೆ ಸುರಿದಿದ್ದು ಇದರ ಪರಿಣಾಮದಿಂದಾಗಿ ಮತ್ತೆ ನೀರಿನ ಹರಿವು ಏರುವ ಪಥದಲ್ಲಿದೆ.",
+                "കോമണ്‍വെല്‍ത്ത് ഗെയിംസ് വനിതാ ക്രിക്കറ്റ് സെമി ഫൈനലില്‍ ഇംഗ്ലണ്ടിനെ ആവേശപ്പോരില്‍ വീഴ്ത്തി ഇന്ത്യ ഫൈനലിലെത്തി."
             ]
 
     return test_sentences
@@ -310,12 +325,12 @@ def main(args):
 
     # set audio config
     audio_config = BaseAudioConfig(
-        trim_db=60.0,
-        mel_fmin=0.0,
-        mel_fmax=8000,
-        log_func="np.log",
-        spec_gain=1.0,
-        signal_norm=False,
+        trim_db=60.0, # default: 45
+        #mel_fmin=0.0,  # default: 0
+        mel_fmax=8000, # default: None
+        log_func="np.log", # default: np.log10
+        spec_gain=1.0, # default: 20
+        signal_norm=False, # default: True
     )
 
     # set characters config
@@ -351,6 +366,10 @@ def main(args):
         # data loading
         num_loader_workers=args.num_workers,
         num_eval_loader_workers=args.num_workers_eval,
+        # model
+        use_d_vector_file=args.use_d_vector_file,
+        d_vector_file=args.d_vector_file,
+        d_vector_dim=args.d_vector_dim,
         # trainer - run
         output_path=args.output_path,
         project_name='acoustic_model',
@@ -395,6 +414,9 @@ def main(args):
         vitsArgs = VitsArgs(
             use_speaker_embedding=args.use_speaker_embedding,
             use_sdp=args.use_sdp,
+            use_speaker_encoder_as_loss=args.use_speaker_encoder_as_loss,
+            speaker_encoder_config_path=args.speaker_encoder_config_path,
+            speaker_encoder_model_path=args.speaker_encoder_model_path,
         )
         config = VitsConfig(
             **base_tts_config,
@@ -402,14 +424,27 @@ def main(args):
             use_speaker_embedding=args.use_speaker_embedding,   
         )
     elif args.model == "fastpitch":
+        return_wav = False
+        compute_linear_spec = False
+        if args.use_speaker_encoder_as_loss:
+            return_wav = True
+            compute_linear_spec = True
         config = FastPitchConfig(
             **base_tts_config,
-            model_args = ForwardTTSArgs(use_aligner=args.use_aligner),
+            model_args = ForwardTTSArgs(
+                use_aligner=args.use_aligner, 
+                hidden_channels=args.hidden_channels,
+                use_speaker_encoder_as_loss=args.use_speaker_encoder_as_loss,
+                speaker_encoder_config_path=args.speaker_encoder_config_path,
+                speaker_encoder_model_path=args.speaker_encoder_model_path,
+            ),
             use_speaker_embedding=args.use_speaker_embedding,
             compute_f0=True,
             f0_cache_path=os.path.join(args.output_path, "f0_cache"),
             sort_by_audio_len=True,
             max_seq_len=500000,
+            return_wav= return_wav,
+            compute_linear_spec=compute_linear_spec
         )
 
         if not config.model_args.use_aligner:
@@ -460,6 +495,12 @@ def main(args):
     if args.use_speaker_embedding:
         speaker_manager = SpeakerManager()
         speaker_manager.set_ids_from_data(train_samples + eval_samples, parse_key="speaker_name")
+    elif args.use_d_vector_file:
+        speaker_manager = SpeakerManager(
+            d_vectors_file_path=args.d_vector_file, 
+            encoder_model_path=args.speaker_encoder_model_path,
+            encoder_config_path=args.speaker_encoder_config_path,
+            use_cuda=True)
     else:
         speaker_manager = None
     

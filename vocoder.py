@@ -4,6 +4,7 @@ from ossaudiodev import SNDCTL_SEQ_RESETSAMPLES
 
 from trainer import Trainer, TrainerArgs
 
+from TTS.tts.configs.shared_configs import BaseAudioConfig
 from TTS.utils.audio import AudioProcessor
 from TTS.vocoder.configs import HifiganConfig
 from TTS.vocoder.datasets.preprocess import load_wav_data
@@ -12,12 +13,12 @@ from TTS.vocoder.models.gan import GAN
 from utils import str2bool
 
 def get_arg_parser():
-    parser = argparse.ArgumentParser(description='Traning and evaluation script for vocoder model ')
+    parser = argparse.ArgumentParser(description='Training and evaluation script for vocoder model ')
 
     # dataset parameters
-    parser.add_argument('--dataset_name', default='indictts', type=str)
-    parser.add_argument('--dataset_path', default='../../datasets/indictts/{}/wavs-20k', type=str)
+    parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
+    parser.add_argument('--dataset_path', default='../../datasets/{}/{}', type=str)   
     parser.add_argument('--speaker', default='all') # eg. all, female, male
     parser.add_argument('--eval_split_size', default=10, type=int)
 
@@ -41,11 +42,11 @@ def get_arg_parser():
     parser.add_argument('--run_description', default='None', type=str)
     parser.add_argument('--output_path', default='output_vocoder', type=str)
     parser.add_argument('--test_delay_epochs', default=0, type=int)
-    parser.add_argument('--print_step', default=25, type=int)
-    parser.add_argument('--plot_step', default=25, type=int)
-    parser.add_argument('--save_step', default=1000, type=int)
-    parser.add_argument('--save_n_checkpoints', default=5, type=int)
-    parser.add_argument('--save_best_after', default=1000, type=int)
+    parser.add_argument('--print_step', default=100, type=int)
+    parser.add_argument('--plot_step', default=100, type=int)
+    parser.add_argument('--save_step', default=10000, type=int)
+    parser.add_argument('--save_n_checkpoints', default=1, type=int)
+    parser.add_argument('--save_best_after', default=10000, type=int)
     parser.add_argument('--target_loss', default='loss_1')
     parser.add_argument('--print_eval', default=False, type=str2bool)
     parser.add_argument('--run_eval', default=True, type=str2bool)
@@ -80,7 +81,7 @@ def main(args):
             log_func="np.log",
             spec_gain=1.0,
             signal_norm=False,
-        )
+        ),
         batch_size=args.batch_size,
         eval_batch_size=args.batch_size_eval,
         num_loader_workers=args.num_workers,
@@ -137,6 +138,11 @@ if __name__ == '__main__':
 
     parser = get_arg_parser()
     args = parser.parse_args()
+
+    args.dataset_path = args.dataset_path.format(args.dataset_name, args.language)
+    if args.dataset_name == 'googletts':
+        args.dataset_path += '/processed'
+    args.dataset_path += '/wavs-20k'
 
     if not os.path.exists(args.output_path):
         os.makedirs(args.output_path)
