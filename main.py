@@ -60,6 +60,8 @@ def get_arg_parser():
     parser.add_argument('--speaker_encoder_model_path', default='', type=str) 
     parser.add_argument('--speaker_encoder_config_path', default='', type=str) 
     parser.add_argument('--use_speaker_encoder_as_loss', default=False, type=str2bool) # only supported in vits, fastpitch
+    parser.add_argument('--vocoder_path', default=None, type=str) # external vocoder for speaker encoder loss in fastpitch
+    parser.add_argument('--vocoder_config_path', default=None, type=str)  # external vocoder for speaker encoder loss in fastpitch
     parser.add_argument('--use_style_encoder', default=False, type=str2bool)
     parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
     parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
@@ -424,11 +426,18 @@ def main(args):
             use_speaker_embedding=args.use_speaker_embedding,   
         )
     elif args.model == "fastpitch":
-        return_wav = False
-        compute_linear_spec = False
+
         if args.use_speaker_encoder_as_loss:
             return_wav = True
             compute_linear_spec = True
+            assert args.vocoder_path is not None
+            assert args.vocoder_config_path is not None
+        else:
+            return_wav = False
+            compute_linear_spec = False
+            args.vocoder_path = None
+            args.vocoder_config_path = None
+
         config = FastPitchConfig(
             **base_tts_config,
             model_args = ForwardTTSArgs(
@@ -437,6 +446,8 @@ def main(args):
                 use_speaker_encoder_as_loss=args.use_speaker_encoder_as_loss,
                 speaker_encoder_config_path=args.speaker_encoder_config_path,
                 speaker_encoder_model_path=args.speaker_encoder_model_path,
+                vocoder_path=args.vocoder_path,
+                vocoder_config_path=args.vocoder_config_path
             ),
             use_speaker_embedding=args.use_speaker_embedding,
             compute_f0=True,

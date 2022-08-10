@@ -12,6 +12,8 @@ CUDA_VISIBLE_DEVICES='3' python3 main.py --dataset_name googletts \
     --speaker_encoder_model_path output_speaker_encoder/pretrained/yourtts_model.pth.tar \
     --speaker_encoder_config_path output_speaker_encoder/pretrained/yourtts_config.json \
     --use_speaker_encoder_as_loss t \
+    --vocoder_path output_vocoder/store/ta/hifigan_multi/checkpoint_400000.pth \
+    --vocoder_config_path output_vocoder/store/ta/hifigan_multi/config.json \
     --use_pre_computed_alignments f \
     --batch_size 2 \
     --batch_size_eval 2 \
