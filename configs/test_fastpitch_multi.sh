@@ -5,12 +5,12 @@
 # cp output_vocoder/ta_hifigan_all-July-27-2022_06+13AM-d52256a/checkpoint_400000.pth output_vocoder/store/ta/hifigan_multi/
 # cp output_vocoder/ta_hifigan_all-July-27-2022_06+13AM-d52256a/config.json output_vocoder/store/ta/hifigan_multi/
 
-python3 -m TTS.bin.synthesize --text "../../datasets/indictts/ta/samples.csv" \
-    --model_path output/store/ta/fastpitch/best_model.pth \
-    --config_path output/store/ta/fastpitch/config.json \
-    --vocoder_path output_vocoder/store/ta/hifigan/checkpoint_1060000.pth \
-    --vocoder_config_path output_vocoder/store/ta/hifigan/config.json \
-    --out_path output_wavs/samples_indictts_ta_male_fastpitch
+python3 -m TTS.bin.synthesize --text "../../datasets/googletts/ta/samples.csv" \
+    --model_path output/store/ta/fastpitch_multi/best_model.pth \
+    --config_path output/store/ta/fastpitch_multi/config.json \
+    --vocoder_path output_vocoder/store/ta/hifigan_multi/checkpoint_400000.pth \
+    --vocoder_config_path output_vocoder/store/ta/hifigan_multi/config.json \
+    --out_path output_wavs/samples_googletts_ta_multi_fastpitch
 
 # python3 scripts/evaluate_mcd.py \
 #     output_wavs/ta_male_fastpitch_hifi/ \
