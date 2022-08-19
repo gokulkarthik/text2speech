@@ -12,12 +12,26 @@ from TTS.vocoder.models.gan import GAN
 
 from utils import str2bool
 
+
+def formatter_indictts(root_path, meta_file, **kwargs):  # pylint: disable=unused-argument
+    txt_file = os.path.join(root_path, meta_file)
+    items = []
+    with open(txt_file, "r", encoding="utf-8") as ttf:
+        for line in ttf:
+            cols = line.split("|")
+            wav_file = os.path.join(root_path, "wavs-22k", cols[0] + ".wav")
+            text = cols[1].strip()
+            speaker_name = cols[2].strip()
+            #items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name})
+            items.append(wav_file)
+    return items
+
 def get_arg_parser():
     parser = argparse.ArgumentParser(description='Training and evaluation script for vocoder model ')
 
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
-    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'hi'])
+    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni' 'all'])
     parser.add_argument('--dataset_path', default='../../datasets/{}/{}', type=str)   
     parser.add_argument('--speaker', default='all') # eg. all, female, male
     parser.add_argument('--eval_split_size', default=10, type=int)
@@ -61,15 +75,7 @@ def get_arg_parser():
     #parser.add_argument('--gpus', default='0', type=str)
 
     return parser
-
-def filter_speaker(samples, speaker, dataset_name='indictts', language='ta'):
-    if speaker == 'all':
-        return samples
-    if dataset_name == 'indictts':
-        if args.language in  ['ta', 'hi']:
-            start_idx = 5
-        samples = [sample for sample in samples if sample.rsplit('/', 1)[-1].split('_')[1][start_idx:]==speaker]
-    return samples
+    
 
 def main(args):
 
@@ -116,9 +122,14 @@ def main(args):
 
     ap = AudioProcessor(**config.audio.to_dict())
 
-    eval_samples, train_samples = load_wav_data(config.data_path, config.eval_split_size)
-    eval_samples = filter_speaker(eval_samples, args.speaker, dataset_name=args.dataset_name, language=args.language)
-    train_samples = filter_speaker(train_samples, args.speaker, dataset_name=args.dataset_name, language=args.language)
+    if args.speaker == 'all':
+        meta_file_train="metadata_train.csv"
+        meta_file_val="metadata_test.csv"
+    else:
+        meta_file_train=f"metadata_train_{args.speaker}.csv"
+        meta_file_val=f"metadata_test_{args.speaker}.csv"
+    train_samples = formatter_indictts(config.data_path, meta_file_train)
+    eval_samples = formatter_indictts(config.data_path, meta_file_val)
 
     model = GAN(config, ap)
 
@@ -142,7 +153,7 @@ if __name__ == '__main__':
     args.dataset_path = args.dataset_path.format(args.dataset_name, args.language)
     if args.dataset_name == 'googletts':
         args.dataset_path += '/processed'
-    args.dataset_path += '/wavs-20k'
+    #args.dataset_path += '/wavs-22k'
 
     if not os.path.exists(args.output_path):
         os.makedirs(args.output_path)

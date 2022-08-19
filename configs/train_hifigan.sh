@@ -1,9 +1,8 @@
-CUDA_VISIBLE_DEVICES='2' python3 vocoder.py --dataset_name googletts \
-    --language ta \
-    --speaker all \
-    --batch_size 16 \
-    --batch_size_eval 16 \
+CUDA_VISIBLE_DEVICES='0' python3 vocoder.py --dataset_name indictts \
+    --language mr \
+    --speaker male \
+    --batch_size 32 \
+    --batch_size_eval 32 \
     --epochs 5000 \
     --port 10004 \
-    --mixed_precision t \
-    --run_description "hifigan_ta_multi"
+    --mixed_precision t 

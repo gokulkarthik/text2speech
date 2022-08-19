@@ -37,7 +37,7 @@ def get_arg_parser():
 
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
-    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'all'])
+    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni' 'all'])
     parser.add_argument('--dataset_path', default='/home/gokulkarthikk/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
@@ -72,6 +72,7 @@ def get_arg_parser():
 
     # training parameters
     parser.add_argument('--epochs', default=1000, type=int)
+    parser.add_argument('--aligner_epochs', default=1000, type=int) # For FastPitch
     parser.add_argument('--batch_size', default=8, type=int)
     parser.add_argument('--batch_size_eval', default=8, type=int)
     parser.add_argument('--batch_group_size', default=0, type=int)
@@ -114,7 +115,7 @@ def formatter_indictts(root_path, meta_file, **kwargs):  # pylint: disable=unuse
     with open(txt_file, "r", encoding="utf-8") as ttf:
         for line in ttf:
             cols = line.split("|")
-            wav_file = os.path.join(root_path, "wavs-20k", cols[0] + ".wav")
+            wav_file = os.path.join(root_path, "wavs-22k", cols[0] + ".wav")
             text = cols[1].strip()
             speaker_name = cols[2].strip()
             items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name})
@@ -174,6 +175,12 @@ def get_test_sentences(language):
         test_sentences = [
                 "Brazilian police say a suspect has confessed to burying the bodies of missing British journalist Dom Phillips and indigenous expert Bruno Pereira.",
                 "Protests have erupted in India over a new reform scheme to hire soldiers for a fixed term for the armed forces",
+            ]
+        
+    elif language == 'mr':
+        test_sentences = [
+                "मविआ सरकार अल्पमतात आल्यानंतर अनेक निर्णय घेतले: मुख्यमंत्री एकनाथ शिंदे यांचा आरोप.",
+                "वर्ध्यात भदाडी नदीच्या पुलावर कार डिव्हायडरला धडकून भीषण अपघात, दोघे गंभीर जखमी.",
             ]
 
     elif language == 'all':
@@ -455,7 +462,8 @@ def main(args):
             sort_by_audio_len=True,
             max_seq_len=500000,
             return_wav= return_wav,
-            compute_linear_spec=compute_linear_spec
+            compute_linear_spec=compute_linear_spec,
+            aligner_epochs=args.aligner_epochs
         )
 
         if not config.model_args.use_aligner:
