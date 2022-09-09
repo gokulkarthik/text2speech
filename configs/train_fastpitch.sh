@@ -1,19 +1,19 @@
-CUDA_VISIBLE_DEVICES='1' python3 main.py --dataset_name indictts \
-    --language hi \
-    --speaker male \
+python3 main.py --dataset_name indictts \
+    --language ta \
+    --speaker all \
     --max_audio_len 441000 \
     --max_text_len 400 \
     --model fastpitch \
     --hidden_channels 512 \
-    --use_speaker_embedding f \
+    --use_speaker_embedding t \
     --use_d_vector_file f \
     --use_speaker_encoder_as_loss f \
+    --use_ssim_loss f \
     --use_aligner t \
     --use_pre_computed_alignments f \
     --batch_size 32 \
     --batch_size_eval 32 \
     --batch_group_size 0 \
     --epochs 5000 \
-    --aligner_epochs 0 \
-    --mixed_precision t \
-    --pretrained_checkpoint_path /home/gokulkarthikk/repos/text2speech-ta/output/hi_fastpitch_indictts_male-August-16-2022_07+34PM-ac6102b/best_model_119280.pth
+    --aligner_epochs 5000 \
+    --mixed_precision t

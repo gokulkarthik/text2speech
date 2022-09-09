@@ -38,7 +38,7 @@ def get_arg_parser():
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni' 'all'])
-    parser.add_argument('--dataset_path', default='/home/gokulkarthikk/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
+    parser.add_argument('--dataset_path', default='/nlsasfs/home/ai4bharat/manidl/ttsteam/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
@@ -60,6 +60,7 @@ def get_arg_parser():
     parser.add_argument('--speaker_encoder_model_path', default='', type=str) 
     parser.add_argument('--speaker_encoder_config_path', default='', type=str) 
     parser.add_argument('--use_speaker_encoder_as_loss', default=False, type=str2bool) # only supported in vits, fastpitch
+    parser.add_argument('--use_ssim_loss', default=False, type=str2bool) # only supported in fastpitch
     parser.add_argument('--vocoder_path', default=None, type=str) # external vocoder for speaker encoder loss in fastpitch
     parser.add_argument('--vocoder_config_path', default=None, type=str)  # external vocoder for speaker encoder loss in fastpitch
     parser.add_argument('--use_style_encoder', default=False, type=str2bool)
@@ -387,7 +388,7 @@ def main(args):
         # trainer - loggging
         print_step=args.print_step,
         plot_step=args.plot_step,
-        dashboard_logger='wandb',
+        dashboard_logger='tensorboard',
         wandb_entity='gokulkarthik',
         # trainer - checkpointing
         save_step=args.save_step,
@@ -457,6 +458,7 @@ def main(args):
                 vocoder_config_path=args.vocoder_config_path
             ),
             use_speaker_embedding=args.use_speaker_embedding,
+            use_ssim_loss=args.use_ssim_loss,
             compute_f0=True,
             f0_cache_path=os.path.join(args.output_path, "f0_cache"),
             sort_by_audio_len=True,
