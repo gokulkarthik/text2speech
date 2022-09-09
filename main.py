@@ -388,7 +388,7 @@ def main(args):
         # trainer - loggging
         print_step=args.print_step,
         plot_step=args.plot_step,
-        dashboard_logger='tensorboard',
+        dashboard_logger='wandb',
         wandb_entity='gokulkarthik',
         # trainer - checkpointing
         save_step=args.save_step,
