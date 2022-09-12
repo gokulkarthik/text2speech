@@ -1,1 +1,1 @@
-sh configs/train_fastpitch.sh
+CUDA_VISIBLE_DEVICES=3 sh configs/train_fastpitch.sh

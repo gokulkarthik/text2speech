@@ -81,6 +81,10 @@ def get_arg_parser():
     parser.add_argument('--num_workers_eval', default=8, type=int)
     parser.add_argument('--mixed_precision', default=False, type=str2bool)
     parser.add_argument('--compute_input_seq_cache', default=False, type=str2bool)
+    parser.add_argument('--lr', default=0.001, type=float)
+    parser.add_argument('--lr_scheduler', default='NoamLR', choices=['NoamLR', 'StepLR'])
+    parser.add_argument('--lr_scheduler_warmup_steps', default=4000, type=int) # NoamLR
+    parser.add_argument('--lr_scheduler_step_size', default=50000, type=int) # StepLR
 
     # training - logging parameters 
     parser.add_argument('--run_description', default='None', type=str)
@@ -356,6 +360,16 @@ def main(args):
         phonemes=None
     )
 
+    if args.lr_scheduler == 'NoamLR':
+        lr_scheduler_params = {
+             "warmup_steps": args.lr_scheduler_warmup_steps
+        }
+    elif args.lr_scheduler == 'StepLR':
+        lr_scheduler_params = {
+             "step_size": args.lr_scheduler_step_size
+        }
+    else:
+        raise NotImplementedError()
     # set base tts config
     base_tts_config = Namespace(
         # input representation
@@ -407,6 +421,9 @@ def main(args):
         batch_size=args.batch_size,
         eval_batch_size=args.batch_size_eval,
         batch_group_size=args.batch_group_size,
+        lr=args.lr,
+        lr_scheduler=args.lr_scheduler,
+        lr_scheduler_params = lr_scheduler_params,
         # test
         #test_sentences_file=f'test_sentences/{args.language}.txt',
         test_sentences=get_test_sentences(args.language),
@@ -576,7 +593,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
     parser = get_arg_parser()
     args = parser.parse_args()
