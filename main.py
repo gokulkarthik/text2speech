@@ -38,7 +38,7 @@ def get_arg_parser():
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni' 'all'])
-    parser.add_argument('--dataset_path', default='/nlsasfs/home/ai4bharat/manidl/ttsteam/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
+    parser.add_argument('--dataset_path', default='/home/gokul_kumar/Desktop/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
@@ -388,7 +388,7 @@ def main(args):
         # trainer - loggging
         print_step=args.print_step,
         plot_step=args.plot_step,
-        dashboard_logger='tensorboard',
+        dashboard_logger='wandb',
         wandb_entity='gokulkarthik',
         # trainer - checkpointing
         save_step=args.save_step,
@@ -458,7 +458,7 @@ def main(args):
                 vocoder_config_path=args.vocoder_config_path
             ),
             use_speaker_embedding=args.use_speaker_embedding,
-            use_ssim_loss=args.use_ssim_loss,
+            use_ssim_loss = args.use_ssim_loss,
             compute_f0=True,
             f0_cache_path=os.path.join(args.output_path, "f0_cache"),
             sort_by_audio_len=True,
@@ -576,7 +576,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     parser = get_arg_parser()
     args = parser.parse_args()
