@@ -38,7 +38,7 @@ def get_arg_parser():
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni' 'all'])
-    parser.add_argument('--dataset_path', default='/home/gokul_kumar/Desktop/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
+    parser.add_argument('--dataset_path', default='/nlsasfs/home/ai4bharat/manidl/ttsteam/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
@@ -81,10 +81,11 @@ def get_arg_parser():
     parser.add_argument('--num_workers_eval', default=8, type=int)
     parser.add_argument('--mixed_precision', default=False, type=str2bool)
     parser.add_argument('--compute_input_seq_cache', default=False, type=str2bool)
-    parser.add_argument('--lr', default=0.001, type=float)
-    parser.add_argument('--lr_scheduler', default='NoamLR', choices=['NoamLR', 'StepLR'])
-    parser.add_argument('--lr_scheduler_warmup_steps', default=4000, type=int) # NoamLR
-    parser.add_argument('--lr_scheduler_step_size', default=50000, type=int) # StepLR
+    parser.add_argument('--lr', default=0.00001, type=float)
+    parser.add_argument('--lr_scheduler', default='NoamLR', choices=['NoamLR', 'StepLR', 'LinearLR', 'CyclicLR'])
+    parser.add_argument('--lr_scheduler_warmup_steps', default=500, type=int) # NoamLR, LinearLR
+    parser.add_argument('--lr_scheduler_step_size', default=500, type=int) # StepLR
+    parser.add_argument('--lr_scheduler_gamma', default=0.1, type=float) # StepLR, LinearLR, CyclicLR
 
     # training - logging parameters 
     parser.add_argument('--run_description', default='None', type=str)
@@ -362,11 +363,23 @@ def main(args):
 
     if args.lr_scheduler == 'NoamLR':
         lr_scheduler_params = {
-             "warmup_steps": args.lr_scheduler_warmup_steps
+            "warmup_steps": args.lr_scheduler_warmup_steps
         }
     elif args.lr_scheduler == 'StepLR':
         lr_scheduler_params = {
-             "step_size": args.lr_scheduler_step_size
+            "step_size": args.lr_scheduler_step_size,
+            "gamma": args.lr_scheduler_gamma
+        }
+    elif args.lr_scheduler == 'LinearLR':
+        lr_scheduler_params = {
+            "start_factor": args.lr_scheduler_gamma,
+            "total_iters": args.lr_scheduler_warmup_steps
+        }
+    elif args.lr_scheduler == 'CyclicLR':
+        lr_scheduler_params = {
+            "base_lr": args.lr * args.lr_scheduler_gamma,
+            "max_lr": args.lr,
+            "cycle_momentum": False
         }
     else:
         raise NotImplementedError()
@@ -593,7 +606,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+    #os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
     parser = get_arg_parser()
     args = parser.parse_args()

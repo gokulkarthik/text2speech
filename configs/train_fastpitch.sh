@@ -8,7 +8,7 @@ python3 main.py --dataset_name indictts \
     --use_speaker_embedding t \
     --use_d_vector_file f \
     --use_speaker_encoder_as_loss f \
-    --use_ssim_loss t \
+    --use_ssim_loss f \
     --use_aligner t \
     --use_pre_computed_alignments f \
     --batch_size 32 \
@@ -16,8 +16,11 @@ python3 main.py --dataset_name indictts \
     --batch_group_size 0 \
     --epochs 2500 \
     --aligner_epochs 2500 \
-    --lr 0.0001 \
-    --lr_scheduler StepLR \
-    --lr_scheduler_warmup_steps 4000 \
-    --lr_scheduler_step_size 50000 \
+    --lr 0.00001 \
+    --lr_scheduler NoamLR \
+    --lr_scheduler_warmup_steps 500 \
+    --lr_scheduler_step_size 500 \
+    --lr_scheduler_gamma 0.1 \
+    --num_workers 0 \
+    --num_workers_eval 0 \
     --mixed_precision t
