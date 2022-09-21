@@ -1,6 +1,6 @@
 python3 main.py --dataset_name indictts \
     --language ta \
-    --speaker all \
+    --speaker male \
     --max_audio_len 441000 \
     --max_text_len 400 \
     --model fastpitch \
@@ -8,8 +8,9 @@ python3 main.py --dataset_name indictts \
     --use_speaker_embedding t \
     --use_d_vector_file f \
     --use_speaker_encoder_as_loss f \
-    --use_ssim_loss t \
+    --use_ssim_loss f \
     --use_aligner t \
+    --use_separate_optimizers t \
     --use_pre_computed_alignments f \
     --batch_size 32 \
     --batch_size_eval 32 \
@@ -17,7 +18,9 @@ python3 main.py --dataset_name indictts \
     --epochs 2500 \
     --aligner_epochs 2500 \
     --lr 0.0001 \
-    --lr_scheduler StepLR \
+    --lr_scheduler NoamLR \
     --lr_scheduler_warmup_steps 4000 \
     --lr_scheduler_step_size 50000 \
+    --lr_scheduler_threshold_step 500 \
+    --lr_scheduler_aligner NoamLRStepConstant \
     --mixed_precision t

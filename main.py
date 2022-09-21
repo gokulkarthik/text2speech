@@ -65,6 +65,7 @@ def get_arg_parser():
     parser.add_argument('--vocoder_config_path', default=None, type=str)  # external vocoder for speaker encoder loss in fastpitch
     parser.add_argument('--use_style_encoder', default=False, type=str2bool)
     parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
+    parser.add_argument('--use_separate_optimizers', default=False, type=str2bool) # for aligner in fastspeech, fastpitch
     parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
     parser.add_argument('--pretrained_checkpoint_path', default=None, type=str) # to load pretrained weights
     parser.add_argument('--attention_mask_model_path', default='output/store/ta/fastpitch/best_model.pth', type=str) # set if use_aligner==False and use_pre_computed_alignments==False #CHANGE
@@ -82,9 +83,11 @@ def get_arg_parser():
     parser.add_argument('--mixed_precision', default=False, type=str2bool)
     parser.add_argument('--compute_input_seq_cache', default=False, type=str2bool)
     parser.add_argument('--lr', default=0.001, type=float)
-    parser.add_argument('--lr_scheduler', default='NoamLR', choices=['NoamLR', 'StepLR'])
+    parser.add_argument('--lr_scheduler', default='NoamLR', choices=['NoamLR', 'StepLR', 'NoamLRStepConstant', 'NoamLRStepDecay'])
     parser.add_argument('--lr_scheduler_warmup_steps', default=4000, type=int) # NoamLR
     parser.add_argument('--lr_scheduler_step_size', default=50000, type=int) # StepLR
+    parser.add_argument('--lr_scheduler_threshold_step', default=500, type=int) # NoamLRStep+
+    parser.add_argument('--lr_scheduler_aligner', default='NoamLR', choices=['NoamLR', 'StepLR', 'NoamLRStepConstant', 'NoamLRStepDecay'])
 
     # training - logging parameters 
     parser.add_argument('--run_description', default='None', type=str)
@@ -362,14 +365,37 @@ def main(args):
 
     if args.lr_scheduler == 'NoamLR':
         lr_scheduler_params = {
-             "warmup_steps": args.lr_scheduler_warmup_steps
+            "warmup_steps": args.lr_scheduler_warmup_steps
         }
     elif args.lr_scheduler == 'StepLR':
         lr_scheduler_params = {
-             "step_size": args.lr_scheduler_step_size
+            "step_size": args.lr_scheduler_step_size
+        }
+    elif args.lr_scheduler in ['NoamLRStepConstant', 'NoamLRStepDecay'] :
+        lr_scheduler_params = {
+            "warmup_steps": args.lr_scheduler_warmup_steps,
+            "threshold_step": args.lr_scheduler_threshold_step
         }
     else:
         raise NotImplementedError()
+
+    if args.lr_scheduler_aligner == 'NoamLR':
+        lr_scheduler_aligner_params = {
+            "warmup_steps": args.lr_scheduler_warmup_steps
+        }
+    elif args.lr_scheduler_aligner == 'StepLR':
+        lr_scheduler_aligner_params = {
+            "step_size": args.lr_scheduler_step_size
+        }
+    elif args.lr_scheduler_aligner in ['NoamLRStepConstant', 'NoamLRStepDecay'] :
+        lr_scheduler_aligner_params = {
+            "warmup_steps": args.lr_scheduler_warmup_steps,
+            "threshold_step": args.lr_scheduler_threshold_step
+        }
+    else:
+        raise NotImplementedError()
+
+
     # set base tts config
     base_tts_config = Namespace(
         # input representation
@@ -467,6 +493,7 @@ def main(args):
             **base_tts_config,
             model_args = ForwardTTSArgs(
                 use_aligner=args.use_aligner, 
+                use_separate_optimizers=args.use_separate_optimizers,
                 hidden_channels=args.hidden_channels,
                 use_speaker_encoder_as_loss=args.use_speaker_encoder_as_loss,
                 speaker_encoder_config_path=args.speaker_encoder_config_path,
@@ -482,7 +509,9 @@ def main(args):
             max_seq_len=500000,
             return_wav= return_wav,
             compute_linear_spec=compute_linear_spec,
-            aligner_epochs=args.aligner_epochs
+            aligner_epochs=args.aligner_epochs,
+            lr_scheduler_aligner=args.lr_scheduler_aligner,
+            lr_scheduler_aligner_params = lr_scheduler_aligner_params
         )
 
         if not config.model_args.use_aligner:
@@ -593,7 +622,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
     parser = get_arg_parser()
     args = parser.parse_args()
