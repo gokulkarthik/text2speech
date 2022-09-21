@@ -23,7 +23,6 @@ python3 main.py --dataset_name indictts \
     --lr_scheduler_step_size 500 \
     --lr_scheduler_threshold_step 500 \
     --lr_scheduler_aligner NoamLRStepConstant \
-    --lr_scheduler_step_size 500 \
     --lr_scheduler_gamma 0.1 \
     --num_workers 0 \
     --num_workers_eval 0 \
