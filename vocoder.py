@@ -31,7 +31,7 @@ def get_arg_parser():
 
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
-    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni' 'all'])
+    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni', 'all', 'tef13x'])
     parser.add_argument('--dataset_path', default='../../datasets/{}/{}', type=str)   
     parser.add_argument('--speaker', default='all') # eg. all, female, male
     parser.add_argument('--eval_split_size', default=10, type=int)
@@ -114,10 +114,10 @@ def main(args):
         output_path=args.output_path,
         distributed_url=f'tcp://localhost:{args.port}',
         dashboard_logger='wandb',
-        project_name='vocoder',
+        project_name='indic-vocoders',
         run_name=f'{args.language}_{args.model}_{args.speaker}',
         run_description=args.run_description,
-        wandb_entity='gokulkarthik'
+        wandb_entity='indic-asr'
     )
 
     ap = AudioProcessor(**config.audio.to_dict())

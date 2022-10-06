@@ -7,3 +7,5 @@ wandb/
 output_wavs/
 output_speaker_encoder/
 temp.py
+saved_models/
+indic_vocoders/

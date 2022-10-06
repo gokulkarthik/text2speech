@@ -37,8 +37,8 @@ def get_arg_parser():
 
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
-    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni' 'all'])
-    parser.add_argument('--dataset_path', default='/nlsasfs/home/ai4bharat/manidl/ttsteam/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
+    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'tef13x', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni' 'all'])
+    parser.add_argument('--dataset_path', default='/home/praveen/ttsteam/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
@@ -188,6 +188,11 @@ def get_test_sentences(language):
                 "मविआ सरकार अल्पमतात आल्यानंतर अनेक निर्णय घेतले: मुख्यमंत्री एकनाथ शिंदे यांचा आरोप.",
                 "वर्ध्यात भदाडी नदीच्या पुलावर कार डिव्हायडरला धडकून भीषण अपघात, दोघे गंभीर जखमी.",
             ]
+    elif language == 'te' or language == 'tef13x':
+        test_sentences = [
+            "తెలంగాణలో నూతంగా నిర్మిస్తున్న సచివాలయ భవనానికి రాజ్యంగ నిర్మాత డాక్టర్‌.",
+            "ఇదే సందర్భంలో బీఏసీలో అధికార, ప్రతిపక్ష నాయకుల కుటుంబ సభ్యుల మీద వ్యక్తిగత ఆరోపణలపై కూడా చర్చ జరిగింది. ముఖ్యమంత్రిని జగన్ అంటూ మర్యాద లేకుండా సంభోదిస్తున్నారని ప్రభుత్వ చీఫ్ విప్ శ్రీకాంత్ రెడ్డి ప్రస్తావించగా."
+        ]
 
     elif language == 'all':
         test_sentences = [
@@ -409,14 +414,14 @@ def main(args):
         d_vector_dim=args.d_vector_dim,
         # trainer - run
         output_path=args.output_path,
-        project_name='acoustic_model',
+        project_name='indic-tts',
         run_name=f'{args.language}_{args.model}_{args.dataset_name}_{args.speaker}',
         run_description=args.run_description,
         # trainer - loggging
         print_step=args.print_step,
         plot_step=args.plot_step,
         dashboard_logger='wandb',
-        wandb_entity='gokulkarthik',
+        wandb_entity='indic-asr',
         # trainer - checkpointing
         save_step=args.save_step,
         save_n_checkpoints=args.save_n_checkpoints,
