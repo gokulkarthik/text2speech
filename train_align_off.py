@@ -36,8 +36,8 @@ def get_arg_parser():
     parser = argparse.ArgumentParser(description='Traning and evaluation script for acoustic / e2e TTS model ')
 
     # dataset parameters
-    parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts', 'indictts_multilingual_aksharamukha'])
-    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'tef13x', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni', 'all', 'indoaryan', 'dravidian'])
+    parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
+    parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni', 'brx', 'all', 'tef13x'])
     parser.add_argument('--dataset_path', default='/home/praveen/ttsteam/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
@@ -53,7 +53,6 @@ def get_arg_parser():
     # model parameters
     parser.add_argument('--model', default='glowtts', choices=['glowtts', 'vits', 'fastpitch', 'tacotron2', 'aligntts'])
     parser.add_argument('--hidden_channels', default=512, type=int)
-    parser.add_argument('--use_language_embedding', default=True, type=str2bool)
     parser.add_argument('--use_speaker_embedding', default=True, type=str2bool)
     parser.add_argument('--use_d_vector_file', default=False, type=str2bool)
     parser.add_argument('--d_vector_file', default="", type=str)
@@ -66,6 +65,7 @@ def get_arg_parser():
     parser.add_argument('--vocoder_config_path', default=None, type=str)  # external vocoder for speaker encoder loss in fastpitch
     parser.add_argument('--use_style_encoder', default=False, type=str2bool)
     parser.add_argument('--use_aligner', default=True, type=str2bool) # for fastspeech, fastpitch
+    # parser.add_argument('--use_separate_optimizers', default=False, type=str2bool) # for aligner in fastspeech, fastpitch
     parser.add_argument('--use_pre_computed_alignments', default=False, type=str2bool) # for fastspeech, fastpitch
     parser.add_argument('--pretrained_checkpoint_path', default=None, type=str) # to load pretrained weights
     parser.add_argument('--attention_mask_model_path', default='output/store/ta/fastpitch/best_model.pth', type=str) # set if use_aligner==False and use_pre_computed_alignments==False #CHANGE
@@ -82,10 +82,12 @@ def get_arg_parser():
     parser.add_argument('--num_workers_eval', default=8, type=int)
     parser.add_argument('--mixed_precision', default=False, type=str2bool)
     parser.add_argument('--compute_input_seq_cache', default=False, type=str2bool)
-    parser.add_argument('--lr', default=0.00001, type=float)
-    parser.add_argument('--lr_scheduler', default='NoamLR', choices=['NoamLR', 'StepLR', 'LinearLR', 'CyclicLR'])
-    parser.add_argument('--lr_scheduler_warmup_steps', default=500, type=int) # NoamLR, LinearLR
+    parser.add_argument('--lr', default=0.001, type=float)
+    parser.add_argument('--lr_scheduler', default='NoamLR', choices=['NoamLR', 'StepLR', 'LinearLR', 'CyclicLR', 'NoamLRStepConstant', 'NoamLRStepDecay'])
+    parser.add_argument('--lr_scheduler_warmup_steps', default=4000, type=int) # NoamLR
     parser.add_argument('--lr_scheduler_step_size', default=500, type=int) # StepLR
+    parser.add_argument('--lr_scheduler_threshold_step', default=500, type=int) # NoamLRStep+
+    # parser.add_argument('--lr_scheduler_aligner', default='NoamLR', choices=['NoamLR', 'StepLR', 'LinearLR', 'CyclicLR', 'NoamLRStepConstant', 'NoamLRStepDecay'])
     parser.add_argument('--lr_scheduler_gamma', default=0.1, type=float) # StepLR, LinearLR, CyclicLR
 
     # training - logging parameters 
@@ -122,11 +124,10 @@ def formatter_indictts(root_path, meta_file, **kwargs):  # pylint: disable=unuse
     with open(txt_file, "r", encoding="utf-8") as ttf:
         for line in ttf:
             cols = line.split("|")
-            wav_file = os.path.join(root_path, "../wavs-22k", cols[0] + ".wav")
+            wav_file = os.path.join(root_path, "wavs-22k", cols[0] + ".wav")
             text = cols[1].strip()
             speaker_name = cols[2].strip()
-            language_name = cols[3].strip() if len(cols) > 3 else None
-            items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "language_name": language_name})
+            items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name})
     return items
 
 
@@ -166,17 +167,11 @@ def get_lang_chars(language):
     return lang_chars
 
 
-def get_test_sentences(language):       
+def get_test_sentences(language):
     if language == 'ta':
         test_sentences = [
                 "நேஷனல் ஹெரால்ட் ஊழல் குற்றச்சாட்டு தொடர்பாக, காங்கிரஸ் நாடாளுமன்ற உறுப்பினர் ராகுல் காந்தியிடம், அமலாக்கத்துறை, திங்கள் கிழமையன்று பத்து மணி நேரத்திற்கும் மேலாக விசாரணை நடத்திய நிலையில், செவ்வாய்க்கிழமை மீண்டும் விசாரணைக்கு ஆஜராகிறார்.",
                 "ஒரு விஞ்ஞானி தம் ஆராய்ச்சிகளை எவ்வளவோ கணக்காகவும் முன் யோசனையின் பேரிலும் நுட்பமாகவும் நடத்துகிறார்.",
-            ]
-
-    elif language == 'hi':
-        test_sentences = [
-                "बिहार, राजस्थान और उत्तर प्रदेश से लेकर हरियाणा, मध्य प्रदेश एवं उत्तराखंड में सेना में भर्ती से जुड़ी 'अग्निपथ स्कीम' का विरोध जारी है.",
-                "संयुक्त अरब अमीरात यानी यूएई ने बुधवार को एक फ़ैसला लिया कि अगले चार महीनों तक वो भारत से ख़रीदा हुआ गेहूँ को किसी और को नहीं बेचेगा.",
             ]
 
     elif language == 'en':
@@ -190,19 +185,90 @@ def get_test_sentences(language):
                 "मविआ सरकार अल्पमतात आल्यानंतर अनेक निर्णय घेतले: मुख्यमंत्री एकनाथ शिंदे यांचा आरोप.",
                 "वर्ध्यात भदाडी नदीच्या पुलावर कार डिव्हायडरला धडकून भीषण अपघात, दोघे गंभीर जखमी.",
             ]
-    elif language == 'te' or language == 'tef13x':
-        test_sentences = [
-            "తెలంగాణలో నూతంగా నిర్మిస్తున్న సచివాలయ భవనానికి రాజ్యంగ నిర్మాత డాక్టర్‌.",
-            "ఇదే సందర్భంలో బీఏసీలో అధికార, ప్రతిపక్ష నాయకుల కుటుంబ సభ్యుల మీద వ్యక్తిగత ఆరోపణలపై కూడా చర్చ జరిగింది. ముఖ్యమంత్రిని జగన్ అంటూ మర్యాద లేకుండా సంభోదిస్తున్నారని ప్రభుత్వ చీఫ్ విప్ శ్రీకాంత్ రెడ్డి ప్రస్తావించగా."
-        ]
 
-    elif language in ['all', 'dravidian']:
+    elif language == 'as':
+        test_sentences = [
+                "দেউতাই উইলত স্পষ্টকৈ সেইখিনি মোৰ নামত লিখি দি গৈছে",
+                "গতিকে শিক্ষাৰ বাবেও এনে এক পূৰ্ব প্ৰস্তুত পৰি‌ৱেশ এটাত",
+            ]
+
+    elif language == 'bn':
+        test_sentences = [
+                "লোডশেডিংয়ের কল্যাণে পুজোর দুসপ্তাহ আগে কেনাকাটার মাহেন্দ্রক্ষণে, দোকানে শোভা পাচ্ছে, মোমবাতি",
+                "এক চন্দরা নির্দোষ হইয়াও, আইনের আপাত নিশ্ছিদ্র জালে পড়িয়া প্রাণ দিয়াছিল",
+            ]
+
+    elif language == 'brx':
+        test_sentences = [
+                "गावनि गोजाम गामि नवथिखौ हरखाब नागारनानै गोदान हादानाव गावखौ दिदोमै फसंथा फित्राय हाबाया जोबोद गोब्राब जायोलै गोमजोर",
+                "सानहाबदों आं मोथे मोथो",
+            ]
+
+    elif language == 'gu':
+        test_sentences = [
+                "ઓગણીસો છત્રીસ માં, પ્રથમવાર, એક્રેલીક સેફટી ગ્લાસનું, ઉત્પાદન, શરુ થઈ ગયું.",
+                "વ્યાયામ પછી પ્રોટીન લેવાથી, સ્નાયુની જે પેશીયોને હાનિ પ્હોંચી હોય છે.",
+            ]
+
+    elif language == 'hi':
+        test_sentences = [
+                "बिहार, राजस्थान और उत्तर प्रदेश से लेकर हरियाणा, मध्य प्रदेश एवं उत्तराखंड में सेना में भर्ती से जुड़ी 'अग्निपथ स्कीम' का विरोध जारी है.",
+                "संयुक्त अरब अमीरात यानी यूएई ने बुधवार को एक फ़ैसला लिया कि अगले चार महीनों तक वो भारत से ख़रीदा हुआ गेहूँ को किसी और को नहीं बेचेगा.",
+            ]
+
+    elif language == 'kn':
+        test_sentences = [
+                "ಯಾವುದು ನಿಜ ಯಾವುದು ಸುಳ್ಳು ಎನ್ನುವ ಬಗ್ಗೆ ಚಿಂತಿಸಿ.",
+                "ಶಕ್ತಿ ಇದ್ದರೆನ್ನೊಡನೆ ಜಗಳಕ್ಕೆ ಬಾ",
+            ]
+
+
+    elif language == 'ml':
+        test_sentences = [
+                "ശിലായുഗകാലം മുതൽ മനുഷ്യർ ജ്യാമിതീയ രൂപങ്ങൾ ഉപയോഗിച്ചുവരുന്നു",
+                "വാഹനാപകടത്തിൽ പരുക്കേറ്റ അധ്യാപിക മരിച്ചു",
+            ]
+
+    elif language == 'mni':
+        test_sentences = [
+                "মথং মথং, অসুম কাখিবনা.",
+                "থেবনা ঙাশিংদু অমমম্তা ইল্লে.",
+            ]
+
+    elif language == 'mr':
+        test_sentences = [
+                "म्हणुनच महाराच बिरुद मी मानान वागवल",
+                "घोडयावरून खाली उतरताना घोडेस्वार वृध्दाला म्हणाला, बाबा एवढया कडाक्याच्या थंडीत नदी कडेला तुम्ही किती वेळ बसला होतात.",
+            ]
+
+    elif language == 'or':
+        test_sentences = [
+                "ସାମାନ୍ୟ ଗୋଟିଏ ବାଳକ, ସେ କ’ଣ ମହାଭାରତ ଯୁଦ୍ଧରେ ଲଢ଼ିବ ",
+                "ଏ ଘଟଣା ଦେଖିବାକୁ ଶହ ଶହ ଲୋକ ଧାଇଁଲେ ",
+            ]
+
+    elif language == 'raj':
+        test_sentences = [
+                "कन्हैयालाल सेठिया इत्याद अनुपम काव्य कृतियां है, इंया ई, प्रकति काव्य री दीठ सूं, बादळी, लू",
+                "नई बीनणियां रो घूंघटो नाक रे ऊपर ऊपर पड़यो सावे है",
+            ]
+
+    elif language in ['te', 'tef13x']:
+        test_sentences = [
+                "సింహం అడ్డువచ్చి, తప్పుకో శిక్ష విధించవలసింది నేను అని కోతిని అఙ్ఞాపించింది నక్కకేసి తిరిగి మంత్రి పుంగవా ఈ మూషికాధముడు చోరుడు అని నీకు ఎలా తెలిసింది అని అడిగింది.",
+                "ఈ మాటలు వింటూనే గాలవుడు, కువలయాశ్వాన్ని ఎక్కి, శత్రుజిత్తువద్దకు వెళ్లి, ఋతుధ్వజుణ్ణి పంపమని కోరాడు, ఋతుధ్వజుడు, కువలయాశ్వాన్ని ఎక్కి, గాలవుడి వెంట, ఆయన ఆశ్రమానికి వెళ్ళాడు.",
+            ]
+
+    elif language == 'all':
         test_sentences = [
                 "ஒரு விஞ்ஞானி தம் ஆராய்ச்சிகளை எவ்வளவோ கணக்காகவும் முன் யோசனையின் பேரிலும் நுட்பமாகவும் நடத்துகிறார்.",
                 "ఇక బిన్ లాడెన్ తర్వాతి అగ్ర నాయకులు అయ్‌మన్ అల్ జవహరి తదితర ముఖ్యుల 'తలలు నరికి ఈటెలకు గుచ్చండి' అనేవి ఇతర ఆదేశాలు.",
                 "ಕೆಲ ದಿನಗಳಿಂದ ಮಳೆ ಕಡಿಮೆಯಾದಂತೆ ತೋರಿದ್ದರೂ ಕಳೆದ ಎರಡು ದಿನಗಳಲ್ಲಿ ರಾಜ್ಯದ ಹಲವೆಡೆ ಮತ್ತೆ ಮಳೆ ಸುರಿದಿದ್ದು ಇದರ ಪರಿಣಾಮದಿಂದಾಗಿ ಮತ್ತೆ ನೀರಿನ ಹರಿವು ಏರುವ ಪಥದಲ್ಲಿದೆ.",
                 "കോമണ്‍വെല്‍ത്ത് ഗെയിംസ് വനിതാ ക്രിക്കറ്റ് സെമി ഫൈനലില്‍ ഇംഗ്ലണ്ടിനെ ആവേശപ്പോരില്‍ വീഴ്ത്തി ഇന്ത്യ ഫൈനലിലെത്തി."
             ]
+
+    else:
+        raise ValueError("test_sentences are not defined")
 
     return test_sentences
 
@@ -388,8 +454,31 @@ def main(args):
             "max_lr": args.lr,
             "cycle_momentum": False
         }
+    elif args.lr_scheduler in ['NoamLRStepConstant', 'NoamLRStepDecay'] :
+        lr_scheduler_params = {
+            "warmup_steps": args.lr_scheduler_warmup_steps,
+            "threshold_step": args.lr_scheduler_threshold_step
+        }
     else:
         raise NotImplementedError()
+
+    # if args.lr_scheduler_aligner == 'NoamLR':
+    #     lr_scheduler_aligner_params = {
+    #         "warmup_steps": args.lr_scheduler_warmup_steps
+    #     }
+    # elif args.lr_scheduler_aligner == 'StepLR':
+    #     lr_scheduler_aligner_params = {
+    #         "step_size": args.lr_scheduler_step_size
+    #     }
+    # elif args.lr_scheduler_aligner in ['NoamLRStepConstant', 'NoamLRStepDecay'] :
+    #     lr_scheduler_aligner_params = {
+    #         "warmup_steps": args.lr_scheduler_warmup_steps,
+    #         "threshold_step": args.lr_scheduler_threshold_step
+    #     }
+    # else:
+    #     raise NotImplementedError()
+
+
     # set base tts config
     base_tts_config = Namespace(
         # input representation
@@ -416,8 +505,8 @@ def main(args):
         d_vector_dim=args.d_vector_dim,
         # trainer - run
         output_path=args.output_path,
-        project_name='indic-tts',
-        run_name=f'{args.language}_{args.model}_{args.dataset_name}_{args.speaker}',
+        project_name='indic-fastpitch-stage2',
+        run_name=f'{args.language}_{args.model}_{args.dataset_name}_{args.speaker}_{args.run_description}',
         run_description=args.run_description,
         # trainer - loggging
         print_step=args.print_step,
@@ -487,6 +576,7 @@ def main(args):
             **base_tts_config,
             model_args = ForwardTTSArgs(
                 use_aligner=args.use_aligner, 
+                # use_separate_optimizers=args.use_separate_optimizers,
                 hidden_channels=args.hidden_channels,
                 use_speaker_encoder_as_loss=args.use_speaker_encoder_as_loss,
                 speaker_encoder_config_path=args.speaker_encoder_config_path,
@@ -495,7 +585,6 @@ def main(args):
                 vocoder_config_path=args.vocoder_config_path
             ),
             use_speaker_embedding=args.use_speaker_embedding,
-            use_language_embedding=args.use_language_embedding,
             use_ssim_loss = args.use_ssim_loss,
             compute_f0=True,
             f0_cache_path=os.path.join(args.output_path, "f0_cache"),
@@ -503,7 +592,9 @@ def main(args):
             max_seq_len=500000,
             return_wav= return_wav,
             compute_linear_spec=compute_linear_spec,
-            aligner_epochs=args.aligner_epochs
+            aligner_epochs=args.aligner_epochs,
+            # lr_scheduler_aligner=args.lr_scheduler_aligner,
+            # lr_scheduler_aligner_params = lr_scheduler_aligner_params
         )
 
         if not config.model_args.use_aligner:
@@ -563,19 +654,14 @@ def main(args):
     else:
         speaker_manager = None
     
-    if args.use_language_embedding:
-        language_manager = SpeakerManager()
-        language_manager.set_ids_from_data(train_samples + eval_samples, parse_key="language_name")
-    else:
-        language_manager = None
-    
+   
     # load model
     if args.model == 'glowtts':
         model = GlowTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
     elif args.model == 'vits':
         model = Vits(config, ap, tokenizer, speaker_manager=speaker_manager)
     elif args.model == 'fastpitch':
-        model = ForwardTTS(config, ap, tokenizer, speaker_manager=speaker_manager, language_manager=language_manager)
+        model = ForwardTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
     elif args.model == 'tacotron2':
         model = Tacotron2(config, ap, tokenizer, speaker_manager=speaker_manager)
     elif args.model == 'aligntts':
@@ -586,14 +672,6 @@ def main(args):
             config.model_args.num_speakers = speaker_manager.num_speakers
     else:
         config.num_speakers = 1
-    
-    if args.language in ['dravidian', 'indoaryan', 'all']:
-        config.num_languages = language_manager.num_languages
-        if hasattr(config.model_args, 'num_languages'):
-            config.model_args.num_languages = language_manager.num_languages
-    else:
-        config.num_languages = 1
-
     if args.pretrained_checkpoint_path:
         checkpoint_state = torch.load(args.pretrained_checkpoint_path)['model']
         print(" > Partial model initialization...")
@@ -627,7 +705,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    #os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+    #os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
     parser = get_arg_parser()
     args = parser.parse_args()

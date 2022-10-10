@@ -7,4 +7,5 @@ CUDA_VISIBLE_DEVICES='0' python3 vocoder_wavegrad.py --dataset_name indictts \
     --epochs 10000 \
     --eval_split_size 50 \
     --port 10004 \
+    --pretrained_checkpoint_path output_vocoder/hi_wavegrad_all-October-05-2022_10+34AM-a2d54d6/best_model.pth \
     --mixed_precision t
