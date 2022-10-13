@@ -196,13 +196,26 @@ def get_test_sentences(language):
             "ఇదే సందర్భంలో బీఏసీలో అధికార, ప్రతిపక్ష నాయకుల కుటుంబ సభ్యుల మీద వ్యక్తిగత ఆరోపణలపై కూడా చర్చ జరిగింది. ముఖ్యమంత్రిని జగన్ అంటూ మర్యాద లేకుండా సంభోదిస్తున్నారని ప్రభుత్వ చీఫ్ విప్ శ్రీకాంత్ రెడ్డి ప్రస్తావించగా."
         ]
 
-    elif language in ['all', 'dravidian']:
+    elif language in ['all']:
         test_sentences = [
                 "ஒரு விஞ்ஞானி தம் ஆராய்ச்சிகளை எவ்வளவோ கணக்காகவும் முன் யோசனையின் பேரிலும் நுட்பமாகவும் நடத்துகிறார்.",
                 "ఇక బిన్ లాడెన్ తర్వాతి అగ్ర నాయకులు అయ్‌మన్ అల్ జవహరి తదితర ముఖ్యుల 'తలలు నరికి ఈటెలకు గుచ్చండి' అనేవి ఇతర ఆదేశాలు.",
                 "ಕೆಲ ದಿನಗಳಿಂದ ಮಳೆ ಕಡಿಮೆಯಾದಂತೆ ತೋರಿದ್ದರೂ ಕಳೆದ ಎರಡು ದಿನಗಳಲ್ಲಿ ರಾಜ್ಯದ ಹಲವೆಡೆ ಮತ್ತೆ ಮಳೆ ಸುರಿದಿದ್ದು ಇದರ ಪರಿಣಾಮದಿಂದಾಗಿ ಮತ್ತೆ ನೀರಿನ ಹರಿವು ಏರುವ ಪಥದಲ್ಲಿದೆ.",
                 "കോമണ്‍വെല്‍ത്ത് ഗെയിംസ് വനിതാ ക്രിക്കറ്റ് സെമി ഫൈനലില്‍ ഇംഗ്ലണ്ടിനെ ആവേശപ്പോരില്‍ വീഴ്ത്തി ഇന്ത്യ ഫൈനലിലെത്തി."
             ]
+    
+    elif language in ['dravidian']:
+        test_sentences = [  # Aksharamukha
+            "yāvudu nija yāvudu suḷḷu ennuva bagge ciṁtisi.",  # Kannada
+            "mudal ṭirākṭar āyiratti toḷḷāyiram hālṭ enbavarāl seyyappaṭṭadu.",  # Tamil
+            "siṁhaṁ aḍḍuvacci, tappukō śikṣa vidhiṁcavalasiṁdi nēnu ani kōtini aṅñāpiṁciṁdi nakkakēsi tirigi maṁtri puṁgavā ī mūṣikādhamuḍu cōruḍu ani nīku elā telisiṁdi ani aḍigiṁdi.",  # Telugu
+            "śilāyugakālaṁ mutal manuṣyar jyāmitīya rūpaṅṅaḷ upayōgiccuvarunnu"  # Malayalam
+        ]
+    
+    elif language in ['indoaryan']:
+        test_sentences = [  # Aksharamukha
+            "dēutāi uilata spaṣṭakai sēikhini mōra nāmata likhi di gaichē",  # Assamese
+        ]
 
     return test_sentences
 

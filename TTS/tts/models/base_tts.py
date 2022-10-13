@@ -147,8 +147,14 @@ class BaseTTS(BaseTrainerModel):
                     speaker_id = self.speaker_manager.ids[speaker_name]
 
         # get language id
-        if hasattr(self, "language_manager") and config.use_language_embedding and language_name is not None:
-            language_id = self.language_manager.ids[language_name]
+        # if hasattr(self, "language_manager") and config.use_language_embedding and language_name is not None:
+        #     language_id = self.language_manager.ids[language_name]
+        if hasattr(self, "language_manager"):
+            if config.use_language_embedding:
+                if language_name is None:
+                    language_id = self.language_manager.get_random_id()
+                else:
+                    language_id = self.language_manager.ids[language_name]
 
         return {
             "text": text,
@@ -364,6 +370,9 @@ class BaseTTS(BaseTrainerModel):
             "speaker_id": None
             if not self.config.use_speaker_embedding
             else random.sample(sorted(self.speaker_manager.ids.values()), 1),
+            "language_id": None
+            if not self.config.use_language_embedding
+            else random.sample(sorted(self.language_manager.ids.values()), 1),
             "d_vector": d_vector,
             "style_wav": None,  # TODO: handle GST style input
         }
@@ -392,6 +401,7 @@ class BaseTTS(BaseTrainerModel):
                 self.config,
                 "cuda" in str(next(self.parameters()).device),
                 speaker_id=aux_inputs["speaker_id"],
+                language_id=aux_inputs["language_id"],
                 d_vector=aux_inputs["d_vector"],
                 style_wav=aux_inputs["style_wav"],
                 use_griffin_lim=True,
@@ -420,11 +430,20 @@ class BaseTTS(BaseTrainerModel):
             print(" > `speakers_file` is updated in the config.json.")
 
         if hasattr(self, "language_manager") and self.language_manager is not None:
-            output_path = os.path.join(trainer.output_path, "language_ids.json")
+            # output_path = os.path.join(trainer.output_path, "language_ids.json")
+            # self.language_manager.save_ids_to_file(output_path)
+            # trainer.config.language_ids_file = output_path
+            # if hasattr(trainer.config, "model_args"):
+            #     trainer.config.model_args.language_ids_file = output_path
+            # trainer.config.save_json(os.path.join(trainer.output_path, "config.json"))
+            # print(f" > `language_ids.json` is saved to {output_path}.")
+            # print(" > `language_ids_file` is updated in the config.json.")
+            output_path = os.path.join(trainer.output_path, "languages.pth")
             self.language_manager.save_ids_to_file(output_path)
             trainer.config.language_ids_file = output_path
+            # some models don't have `model_args` set
             if hasattr(trainer.config, "model_args"):
                 trainer.config.model_args.language_ids_file = output_path
             trainer.config.save_json(os.path.join(trainer.output_path, "config.json"))
-            print(f" > `language_ids.json` is saved to {output_path}.")
+            print(f" > `languages.pth` is saved to {output_path}.")
             print(" > `language_ids_file` is updated in the config.json.")

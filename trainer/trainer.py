@@ -1393,6 +1393,7 @@ class Trainer:
         Else if  ```mode.test()``` is defined, it will be called and it takes an test data loader as an argument
         and iterate over it.
         """
+        print('TESTUN CALLED')
         self.model.eval()
         test_outputs = None
         if hasattr(self.model, "test_run") or (self.num_gpus > 1 and hasattr(self.model.module, "test_run")):

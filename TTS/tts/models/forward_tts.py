@@ -699,7 +699,7 @@ class ForwardTTS(BaseTTS):
         return outputs
 
     @torch.no_grad()
-    def inference(self, x, aux_input={"d_vectors": None, "speaker_ids": None}):  # pylint: disable=unused-argument
+    def inference(self, x, aux_input={"d_vectors": None, "speaker_ids": None, "language_ids": None}):  # pylint: disable=unused-argument
         """Model's inference pass.
 
         Args:
@@ -711,11 +711,13 @@ class ForwardTTS(BaseTTS):
             - x_lengths: [B]
             - g: [B, C]
         """
+        print(aux_input)
         g = self._set_speaker_input(aux_input)
+        l = self._set_language_input(aux_input)
         x_lengths = torch.tensor(x.shape[1:2]).to(x.device)
         x_mask = torch.unsqueeze(sequence_mask(x_lengths, x.shape[1]), 1).to(x.dtype).float()
         # encoder pass
-        o_en, x_mask, g, _ = self._forward_encoder(x, x_mask, g)
+        o_en, x_mask, g, _ = self._forward_encoder(x, x_mask, g, l)
         # duration predictor pass
         o_dr_log = self.duration_predictor(o_en, x_mask)
         o_dr = self.format_durations(o_dr_log, x_mask).squeeze(1)
