@@ -1,9 +1,13 @@
 __pycache__/
 output/*
+output_*/*
 !output/store1
 output_vocoder/*
 !output_vocoder/store1
-wandb/
 output_wavs/
 output_speaker_encoder/
+saved_models/
 temp.py
+test_sentences/
+wandb/
+srun_alignoff.sh

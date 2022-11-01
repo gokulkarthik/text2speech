@@ -1,23 +1,11 @@
-# text2speech-indian
+# Towards Building Text-To-Speech Systems for the Next Billion Users
 
-Text-to-speech in Indian languages using CoquiTTS. The models are trained using IndicTTS dataset.
+Deep learning based text-to-speech (TTS) systems have been evolving rapidly with advances in model architectures, training methodologies, and generalization across speakers and languages. However, these advances have not been thoroughly investigated for Indian language speech synthesis. Such investigation is computationally expensive given the number and diversity of Indian languages, relatively lower resource availability, and the diverse set of advances in neural TTS that remain untested.  In this paper, we evaluate the choice of acoustic models, vocoders, supplementary loss functions, training schedules, and speaker and language diversity for Dravidian and Indo-Aryan languages. Based on this, we identify monolingual models with FastPitch and HiFi-GAN V1, trained jointly on male and female speakers to perform the best. With this setup, we train and evaluate TTS models for 13 languages and find our models to significantly improve upon existing models in all languages as measured by mean opinion scores. We open-source all models on the Bhashini platform.
 
-### Supported Acoustic Models:
-1. GlowTTS (Text2Mel)
-2. VITS (Text2Speech)
-3. FastPitch (Text2Mel)
-4. Tactoron2 (Text2Mel)
-5. AlignTTS (Text2Mel)
+**TL;DR:** We open-source SOTA Text-To-Speech models for 13 Indian languages: *Assamese, Bengali, Bodo, Gujarati, Hindi, Kannada, Malayalam, Manipuri, Marathi, Odia, Rajasthani, Tamil and Telugu*
 
-### Supported Vocoders:
-1. HiFiGAN (Mel2Speech)
+**[[ArXiv Preprint (TBD)](#)]**
 
-### Supported Languages:
-1. English (en)
-2. Tamil (ta)
-3. Hindi (hi)
-
-Reference: [https://github.com/coqui-ai/TTS](https://github.com/coqui-ai/TTS)
 
 ### Environment Setup:
 ```
@@ -61,3 +49,5 @@ cp TTS/TTS/bin/synthesize.py to the local TTS installation # added multiple outp
 ### Running Steps:
 1. Set the configuration with [main.py](./main.py), [vocoder.py](./vocoder.py), [configs](./configs) and [run.sh](./run.sh). Make sure to update the CUDA_VISIBLE_DEVICES in all these files.
 2. Train and test by executing `sh run.sh`
+
+Code Reference: [https://github.com/coqui-ai/TTS](https://github.com/coqui-ai/TTS)

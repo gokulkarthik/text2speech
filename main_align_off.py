@@ -38,7 +38,7 @@ def get_arg_parser():
     # dataset parameters
     parser.add_argument('--dataset_name', default='indictts', choices=['ljspeech', 'indictts', 'googletts'])
     parser.add_argument('--language', default='ta', choices=['en', 'ta', 'te', 'kn', 'ml', 'hi', 'mr', 'bn', 'gu', 'or', 'as', 'raj', 'mni', 'brx', 'all'])
-    parser.add_argument('--dataset_path', default='/nlsasfs/home/ai4bharat/praveens/ttsteam/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
+    parser.add_argument('--dataset_path', default='/nlsasfs/home/ai4bharat/manidl/ttsteam/datasets/{}/{}', type=str) # dataset_name, language #CHANGE
     parser.add_argument('--speaker', default='all') # eg. all, male, female, ...
     parser.add_argument('--use_phonemes', default=False, type=str2bool)
     parser.add_argument('--phoneme_language', default='en-us', choices=['en-us'])
@@ -49,7 +49,6 @@ def get_arg_parser():
     parser.add_argument('--max_audio_len', default=float("inf")) # 20*22050
     parser.add_argument('--min_text_len', default=1)
     parser.add_argument('--max_text_len', default=float("inf")) # 400
-    parser.add_argument('--audio_config', default='without_norm', choices=['without_norm', 'with_norm'])
 
     # model parameters
     parser.add_argument('--model', default='glowtts', choices=['glowtts', 'vits', 'fastpitch', 'tacotron2', 'aligntts'])
@@ -422,26 +421,6 @@ def main(args):
         signal_norm=False, # default: True
     )
 
-    audio_configs = {
-        "without_norm": BaseAudioConfig(
-            trim_db=60.0, # default: 45
-            #mel_fmin=0.0,  # default: 0
-            mel_fmax=8000, # default: None
-            log_func="np.log", # default: np.log10
-            spec_gain=1.0, # default: 20
-            signal_norm=False, # default: True
-        ), 
-        "with_norm": BaseAudioConfig(
-            trim_db=60.0, # default: 45
-            #mel_fmin=0.0,  # default: 0
-            mel_fmax=8000, # default: None
-            log_func="np.log10", # default: np.log10
-            spec_gain=20, # default: 20
-            signal_norm=True, # default: True
-        ), 
-    }
-    audio_config = audio_configs[args.audio_config]
-
     # set characters config
     characters_config = CharactersConfig(
         characters_class="TTS.tts.models.vits.VitsCharacters",
@@ -526,7 +505,7 @@ def main(args):
         d_vector_dim=args.d_vector_dim,
         # trainer - run
         output_path=args.output_path,
-        project_name='indic-tts-acoustic',
+        project_name='indic-fastpitch-stage2',
         run_name=f'{args.language}_{args.model}_{args.dataset_name}_{args.speaker}_{args.run_description}',
         run_description=args.run_description,
         # trainer - loggging
@@ -630,7 +609,6 @@ def main(args):
     elif args.model == "tacotron2":
         config = Tacotron2Config(
             **base_tts_config,
-            use_speaker_embedding=args.use_speaker_embedding,
             ga_alpha=0.0,
             decoder_loss_alpha=0.25,
             postnet_loss_alpha=0.25,
@@ -690,7 +668,7 @@ def main(args):
         model = AlignTTS(config, ap, tokenizer, speaker_manager=speaker_manager)
     if args.speaker == 'all':
         config.num_speakers = speaker_manager.num_speakers
-        if hasattr(config, 'model_args') and hasattr(config.model_args, 'num_speakers'):
+        if hasattr(config.model_args, 'num_speakers'):
             config.model_args.num_speakers = speaker_manager.num_speakers
     else:
         config.num_speakers = 1
@@ -727,7 +705,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    #os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
     parser = get_arg_parser()
     args = parser.parse_args()
