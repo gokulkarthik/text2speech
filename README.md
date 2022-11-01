@@ -8,7 +8,13 @@ Deep learning based text-to-speech (TTS) systems have been evolving rapidly with
 
 **[[ArXiv Preprint (TBD)](#)]**
 
+## Unified architecture of our TTS system
+<img src='images/architecture.png' width=1024>
 
+## Results
+<img src='images/evaluation.png' width=1024>
+
+## Setup:
 ### Environment Setup:
 ```
 # 1. Create environment
