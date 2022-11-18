@@ -6,7 +6,7 @@ Deep learning based text-to-speech (TTS) systems have been evolving rapidly with
 
 **Authors:** Gokul Karthik Kumar*, Praveen S V*, Pratyush Kumar, Mitesh M. Khapra, Karthik Nandakumar
 
-**[[ArXiv Preprint (TBD)](#)]**
+**[[ArXiv Preprint](https://arxiv.org/abs/2211.09536)]**
 
 ## Unified architecture of our TTS system
 <img src='images/architecture.png' width=1024>
