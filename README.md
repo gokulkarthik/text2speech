@@ -70,8 +70,21 @@ cp TTS/TTS/bin/synthesize.py to the local TTS installation # added multiple outp
 1. Format IndicTTS dataset in LJSpeech format using [preprocessing/FormatDatasets.ipynb](./preprocessing/FormatDatasets.ipynb)
 2. Analyze IndicTTS dataset to check TTS suitability using [preprocessing/AnalyzeDataset.ipynb](./preprocessing/AnalyzeDataset.ipynb)
 
-### Running Steps:
+### Training Steps:
 1. Set the configuration with [main.py](./main.py), [vocoder.py](./vocoder.py), [configs](./configs) and [run.sh](./run.sh). Make sure to update the CUDA_VISIBLE_DEVICES in all these files.
 2. Train and test by executing `sh run.sh`
 
+### Inference:
+Trained model weight and config files can be downloaded at [this link.](https://github.com/AI4Bharat/Indic-TTS/releases/tag/v1-checkpoints-release)
+
+```
+python3 -m TTS.bin.synthesize --text <TEXT> \
+    --model_path <LANG>/fastpitch/best_model.pth \
+    --config_path <LANG>/config.json \
+    --vocoder_path <LANG>/hifigan/best_model.pth \
+    --vocoder_config_path <LANG>/hifigan/config.json \
+    --out_path <OUT_PATH>
+```
+
+---
 Code Reference: [https://github.com/coqui-ai/TTS](https://github.com/coqui-ai/TTS)
