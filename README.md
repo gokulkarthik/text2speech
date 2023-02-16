@@ -1,8 +1,24 @@
 # Towards Building Text-To-Speech Systems for the Next Billion Users
 
+> 🎉 Accepted at ICASSP 2023
+
 Deep learning based text-to-speech (TTS) systems have been evolving rapidly with advances in model architectures, training methodologies, and generalization across speakers and languages. However, these advances have not been thoroughly investigated for Indian language speech synthesis. Such investigation is computationally expensive given the number and diversity of Indian languages, relatively lower resource availability, and the diverse set of advances in neural TTS that remain untested.  In this paper, we evaluate the choice of acoustic models, vocoders, supplementary loss functions, training schedules, and speaker and language diversity for Dravidian and Indo-Aryan languages. Based on this, we identify monolingual models with FastPitch and HiFi-GAN V1, trained jointly on male and female speakers to perform the best. With this setup, we train and evaluate TTS models for 13 languages and find our models to significantly improve upon existing models in all languages as measured by mean opinion scores. We open-source all models on the [Bhashini platform](https://bhashini.gov.in/ulca/model/explore-models).
 
 **TL;DR:** We open-source SOTA Text-To-Speech models for 13 Indian languages: *Assamese, Bengali, Bodo, Gujarati, Hindi, Kannada, Malayalam, Manipuri, Marathi, Odia, Rajasthani, Tamil and Telugu*.
+
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-assamese-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-assamese-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-bengali-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-bengali-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-bodo-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-bodo-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-gujarati-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-gujarati-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-hindi-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-hindi-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-kannada-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-kannada-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-malayalam-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-malayalam-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-manipuri-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-manipuri-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-marathi-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-marathi-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-rajasthani-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-rajasthani-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-tamil-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-tamil-on-indictts?p=towards-building-text-to-speech-systems-for)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/towards-building-text-to-speech-systems-for/speech-synthesis-telugu-on-indictts)](https://paperswithcode.com/sota/speech-synthesis-telugu-on-indictts?p=towards-building-text-to-speech-systems-for)
+	
 
 **Authors:** Gokul Karthik Kumar*, Praveen S V*, Pratyush Kumar, Mitesh M. Khapra, Karthik Nandakumar
 
