@@ -211,24 +211,24 @@ def main(args):
             eval_samples=eval_samples,
         )
 
-    # if args.pretrained_checkpoint_path:
-    #     checkpoint_state = torch.load(args.pretrained_checkpoint_path)['model']
-    #     print(" > Partial model initialization...")
-    #     model_dict = model.state_dict()
-    #     for k, v in checkpoint_state.items():
-    #         if k not in model_dict:
-    #             print(" | > Layer missing in the model definition: {}".format(k))
-    #     # 1. filter out unnecessary keys
-    #     pretrained_dict = {k: v for k, v in checkpoint_state.items() if k in model_dict}
-    #     # 2. filter out different size layers
-    #     pretrained_dict = {k: v for k, v in pretrained_dict.items() if v.numel() == model_dict[k].numel()}
-    #     # 3. overwrite entries in the existing state dict
-    #     model_dict.update(pretrained_dict)
-    #     model.load_state_dict(model_dict)
-    #     print(" | > {} / {} layers are restored.".format(len(pretrained_dict), len(model_dict)))
-    #     missed_keys = set(model_dict.keys())-set(pretrained_dict.keys())
-    #     print(" | > Missed Keys:", missed_keys)
-    #     print(model_dict.keys(), checkpoint_state.keys())
+    if args.pretrained_checkpoint_path:
+        checkpoint_state = torch.load(args.pretrained_checkpoint_path)['model']
+        print(" > Partial model initialization...")
+        model_dict = model.state_dict()
+        for k, v in checkpoint_state.items():
+            if k not in model_dict:
+                print(" | > Layer missing in the model definition: {}".format(k))
+        # 1. filter out unnecessary keys
+        pretrained_dict = {k: v for k, v in checkpoint_state.items() if k in model_dict}
+        # 2. filter out different size layers
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if v.numel() == model_dict[k].numel()}
+        # 3. overwrite entries in the existing state dict
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
+        print(" | > {} / {} layers are restored.".format(len(pretrained_dict), len(model_dict)))
+        missed_keys = set(model_dict.keys())-set(pretrained_dict.keys())
+        print(" | > Missed Keys:", missed_keys)
+        print(model_dict.keys(), checkpoint_state.keys())
     trainer.fit()
 
 if __name__ == '__main__':

@@ -33,7 +33,7 @@ class BaseTTS(BaseTrainerModel):
         ap: "AudioProcessor",
         tokenizer: "TTSTokenizer",
         speaker_manager: SpeakerManager = None,
-        language_manager: LanguageManager = None,
+        language_manager: SpeakerManager = None,
     ):
         super().__init__()
         self.config = config

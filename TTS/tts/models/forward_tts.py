@@ -204,6 +204,8 @@ class ForwardTTS(BaseTTS):
         super().__init__(config, ap, tokenizer, speaker_manager, language_manager)
         self._set_model_args(config)
 
+        print(self.speaker_manager, self.language_manager)
+
         self.init_multispeaker(config)
         self.init_multilingual(config)
 
@@ -915,7 +917,7 @@ class ForwardTTS(BaseTTS):
             )
             # as we are loading spectograms directly
             speaker_manager.encoder.use_torch_spec = False
-        language_manager = SpeakerManager.init_from_config(config, samples)
+        language_manager = SpeakerManager.init_language_from_config(config, samples)
         return ForwardTTS(new_config, ap, tokenizer, speaker_manager, language_manager)
 
     def get_optimizer(self):

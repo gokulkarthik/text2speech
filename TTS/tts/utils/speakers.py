@@ -129,6 +129,35 @@ class SpeakerManager(EmbeddingManager):
                     d_vectors_file_path=get_from_config_or_model_args_with_default(config, "d_vector_file", None)
                 )
         return speaker_manager
+    
+    @staticmethod
+    def init_language_from_config(config: "Coqpit", samples: Union[List[List], List[Dict]] = None) -> "SpeakerManager":
+        """Initialize a speaker manager from config
+
+        Args:
+            config (Coqpit): Config object.
+            samples (Union[List[List], List[Dict]], optional): List of data samples to parse out the speaker names.
+                Defaults to None.
+
+        Returns:
+            SpeakerEncoder: Speaker encoder object.
+        """
+        speaker_manager = None
+        if get_from_config_or_model_args_with_default(config, "use_language_embedding", False):
+            if samples:
+                speaker_manager = SpeakerManager(data_items=samples)
+            if get_from_config_or_model_args_with_default(config, "speaker_file", None):
+                speaker_manager = SpeakerManager(
+                    speaker_id_file_path=get_from_config_or_model_args_with_default(config, "speaker_file", None)
+                )
+            if get_from_config_or_model_args_with_default(config, "languages_file", None):
+                speaker_manager = SpeakerManager(
+                    speaker_id_file_path=get_from_config_or_model_args_with_default(config, "languages_file", None)
+                )
+        else:
+            print('HI', '-'*100)
+            print(config)
+        return speaker_manager
 
 
 def _set_file_path(path):

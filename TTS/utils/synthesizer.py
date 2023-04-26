@@ -230,6 +230,7 @@ class Synthesizer(object):
 
         if text:
             sens = self.split_into_sentences(text)
+            sens = [s for s in sens if len(s) > 1]
             print(" > Text splitted to sentences.")
             print(sens)
 
