@@ -22,7 +22,7 @@ Deep learning based text-to-speech (TTS) systems have been evolving rapidly with
 
 **Authors:** Gokul Karthik Kumar*, Praveen S V*, Pratyush Kumar, Mitesh M. Khapra, Karthik Nandakumar
 
-**[[ArXiv Preprint](https://arxiv.org/abs/2211.09536)] [[Audio Samples](https://models.ai4bharat.org/#/tts/samples)] [[Try It Live](https://models.ai4bharat.org/#/tts)] [[Video]](https://youtu.be/I3eo8IUAP7s)**
+**[[ArXiv Preprint](https://arxiv.org/abs/2211.09536)] [[Audio Samples](https://models.ai4bharat.org/#/tts/samples)] [[Try It Live](https://models.ai4bharat.org/#/tts)] [[Video](https://youtu.be/I3eo8IUAP7s)]**
 
 ## Unified architecture of our TTS system
 <img src='images/architecture.png' width=1024>
